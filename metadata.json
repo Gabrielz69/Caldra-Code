@@ -1,0 +1,6 @@
+{
+  "name": "CALDRA - Metal Lab Suite",
+  "description": "Traçagem, planificação, cálculo técnico e projetos paramétricos para caldeiraria industrial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

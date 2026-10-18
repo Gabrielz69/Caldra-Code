@@ -1,0 +1,115 @@
+# CALDRA — TRANSFORMAÇÃO DEFINITIVA DO CHAMFER
+# CHAMFER CAD / SHEET METAL / CALDEIRARIA / FABRICAÇÃO
+
+============================================================
+MISSÃO
+============================================================
+
+Transformar o CHAMFER do CALDRA em um núcleo CAD profissional,
+paramétrico e orientado à fabricação, especializado em:
+
+1. CHAPAS METÁLICAS
+2. CALDEIRARIA
+3. PLANIFICAÇÃO
+4. TRAÇAGEM
+5. FABRICAÇÃO CNC
+6. MODELAGEM 3D
+7. MODELAGEM CAD GERAL
+
+O CHAMFER não deve mais ser tratado como apenas um editor 2D
+com visualização 3D.
+
+Ele deve evoluir para o núcleo de modelagem geométrica do CALDRA.
+
+OBJETIVO CONCEITUAL:
+
+    PROJETAR
+        ↓
+    MODELAR 3D
+        ↓
+    PARAMETRIZAR
+        ↓
+    CONVERTER EM CHAPA QUANDO APLICÁVEL
+        ↓
+    DOBRAR
+        ↓
+    DESDOBRAR
+        ↓
+    PLANIFICAR
+        ↓
+    TRAÇAR
+        ↓
+    FABRICAR
+        ↓
+    CNC / DXF / CypCut
+
+Tudo deve partir de um ÚNICO MODELO GEOMÉTRICO CANÔNICO.
+
+============================================================
+REGRA ABSOLUTA — NÃO COPIAR SOLIDWORKS
+============================================================
+
+SOLIDWORKS deve ser utilizado somente como referência conceitual
+e técnica de arquitetura CAD e Sheet Metal.
+
+NÃO copiar:
+- interface;
+- identidade visual;
+- ícones;
+- textos;
+- nomenclatura proprietária;
+- código;
+- layout;
+- aparência;
+- fluxos proprietários;
+- implementação interna.
+
+INSPIRAR-SE SOMENTE nos conceitos gerais de CAD profissional:
+- modelagem paramétrica;
+- árvore de recursos;
+- sketches;
+- restrições geométricas;
+- corpos;
+- features;
+- operações booleanas;
+- superfícies;
+- Sheet Metal;
+- dobras;
+- unfold/fold;
+- flat pattern;
+- multibody;
+- assemblies;
+- fabricação.
+
+O resultado deve ser CALDRA.
+O CHAMFER precisa preservar sua identidade, simplicidade,
+orientação industrial, mobile-first e foco em caldeiraria.
+
+============================================================
+REGRA CRÍTICA — PRESERVAR O QUE JÁ EXISTE
+============================================================
+
+ANTES DE ALTERAR QUALQUER CÓDIGO:
+1. Auditar completamente o repositório.
+2. Identificar o atual motor 2D.
+3. Identificar o atual Wire3D / motor 3D.
+4. Identificar o modelo vetorial interno.
+5. Identificar o sistema paramétrico.
+6. Identificar os motores de Traçagem.
+7. Identificar o sistema de planificação.
+8. Identificar o CHAMFER Vision.
+9. Identificar DXF/SVG/PDF/PNG.
+10. Identificar CNC 2D/CypCut.
+11. Identificar Projects/Projetos.
+12. Identificar os testes existentes.
+
+NÃO substituir um sistema funcional sem necessidade.
+NÃO reescrever o motor 3D existente.
+NÃO quebrar o CHAMFER atual.
+NÃO quebrar a Traçagem.
+NÃO quebrar os modelos paramétricos existentes.
+NÃO quebrar DXF.
+NÃO quebrar CNC.
+NÃO quebrar CALDRA Vision.
+NÃO alterar o sistema de temas sem necessidade.
+A evolução deve ser incremental e compatível.

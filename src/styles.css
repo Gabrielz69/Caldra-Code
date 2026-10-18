@@ -1,0 +1,2572 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+@custom-variant mestre (&:is(.mestre *));
+
+/* Utilitários de rolagem CAD limpa sem barras nativas poluídas */
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/*
+ * CALDRA — Traçado e Planificação Zero Fresta
+ * Design system: "Engineering Glass"
+ * Todos os tokens em oklch. Nunca usar cores literais nos componentes.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --font-display: var(--font-display-family);
+  --font-sans: var(--font-sans-family);
+  --font-mono: var(--font-mono-family);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent2: var(--accent2);
+  --color-pro: var(--accent);
+  --color-pro-foreground: var(--accent-foreground);
+  --color-warn: var(--warn);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-line: var(--line);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-calc-page: var(--calc-page);
+  --color-calc-shell: var(--calc-shell);
+  --color-calc-display: var(--calc-display);
+  --color-calc-recess: var(--calc-recess);
+  --color-calc-key: var(--calc-key);
+  --color-calc-key-hover: var(--calc-key-hover);
+  --color-calc-border: var(--calc-border);
+  --color-calc-line: var(--calc-line);
+  --color-calc-text: var(--calc-text);
+  --color-calc-muted: var(--calc-muted);
+  --color-calc-expression: var(--calc-expression);
+  --color-calc-result: var(--calc-result);
+  --color-calc-cyan: var(--calc-cyan);
+  --color-calc-icon: var(--calc-icon);
+  --color-calc-active: var(--calc-active);
+  --color-calc-tab: var(--calc-tab);
+  --color-calc-error: var(--calc-error);
+}
+
+.calculator-theme {
+  /* Tokens derivados do design system — reagem a tema, AMOLED e cor de destaque. */
+  --calc-page: transparent;
+  --calc-shell: var(--card);
+  --calc-display: color-mix(in oklab, var(--background) 82%, var(--card));
+  --calc-recess: color-mix(in oklab, var(--background) 70%, var(--card));
+  --calc-key: color-mix(in oklab, var(--card) 82%, var(--foreground) 6%);
+  --calc-key-hover: color-mix(in oklab, var(--card) 70%, var(--accent) 12%);
+  --calc-border: var(--border);
+  --calc-line: var(--border);
+  --calc-text: var(--foreground);
+  --calc-muted: var(--muted-foreground);
+  --calc-expression: var(--muted-foreground);
+  --calc-result: var(--foreground);
+  --calc-cyan: var(--accent);
+  --calc-icon: var(--accent);
+  --calc-active: color-mix(in oklab, var(--accent) 16%, transparent);
+  --calc-tab: color-mix(in oklab, var(--accent) 12%, transparent);
+  --calc-error: var(--destructive);
+  --shadow-calc: 0 30px 80px oklch(0 0 0 / 22%), inset 0 1px 0 oklch(1 0 0 / 4%);
+  --shadow-calc-glow: 0 0 18px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+@utility shadow-calc {
+  box-shadow: var(--shadow-calc);
+}
+@utility shadow-calc-glow {
+  box-shadow: var(--shadow-calc-glow);
+}
+
+.calc-icon-button {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid var(--calc-line);
+  border-radius: 999px;
+  color: var(--calc-muted);
+  background: var(--calc-recess);
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.calc-icon-button:hover {
+  color: var(--calc-cyan);
+  border-color: var(--calc-cyan);
+}
+.calc-icon-button:active {
+  transform: scale(0.95);
+}
+.calc-icon-button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.calc-key {
+  display: flex;
+  height: clamp(3.15rem, 8dvh, 4.15rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  border: 1px solid var(--calc-line);
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    155deg,
+    color-mix(in oklab, var(--calc-key) 92%, white 8%),
+    var(--calc-key)
+  );
+  color: var(--calc-text);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 5%),
+    0 5px 10px oklch(0 0 0 / 18%);
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    transform 80ms ease;
+}
+
+.calc-key:hover {
+  background: var(--calc-key-hover);
+  border-color: color-mix(in oklab, var(--calc-cyan) 32%, var(--calc-line));
+}
+.calc-key-main {
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 4.5vw, 1.3rem);
+}
+.calc-key-sub {
+  align-self: flex-start;
+  margin-top: 0.45rem;
+  font-size: 0.55rem;
+  color: var(--calc-muted);
+}
+.calc-key-operator {
+  color: var(--calc-cyan);
+}
+.calc-key-shift {
+  flex-direction: column;
+  color: var(--calc-cyan);
+}
+.calc-key-shift.is-active {
+  border-color: var(--calc-cyan);
+  background: var(--calc-active);
+  box-shadow: var(--shadow-calc-glow);
+}
+.calc-key-equals {
+  border-color: var(--calc-cyan);
+  background: var(--calc-cyan);
+  color: var(--accent-foreground);
+  box-shadow: var(--shadow-calc-glow);
+}
+.calc-key-equals:hover {
+  background: color-mix(in oklab, var(--calc-cyan) 88%, white);
+}
+
+@media (max-width: 420px) {
+  .calc-shell {
+    border-radius: 1.25rem;
+  }
+  .calc-key {
+    border-radius: 0.62rem;
+  }
+}
+
+@media (max-height: 760px) and (orientation: landscape) {
+  .calculator-theme {
+    padding-block: 0.35rem;
+  }
+  .calc-shell {
+    max-width: 920px;
+    padding: 0.65rem;
+  }
+  .calc-display {
+    padding-block: 0.7rem;
+  }
+  .calc-display > div:nth-child(2) {
+    min-height: 2.5rem;
+  }
+  .calc-key {
+    height: 2.45rem;
+  }
+}
+
+:root {
+  --radius: 0.875rem;
+  --font-display-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono-family: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* ——— Motion & Easing Tokens ——— */
+  --motion-fast: 140ms;
+  --motion-normal: 200ms;
+  --motion-panel: 260ms;
+  --motion-complex: 350ms;
+
+  --ease-natural: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-panel: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  /* ——— Elevações Técnicas ——— */
+  --shadow-subtle: 0 1px 3px oklch(0 0 0 / 12%);
+  --shadow-panel: 0 12px 36px oklch(0 0 0 / 28%), 0 1px 3px oklch(0 0 0 / 12%);
+  --shadow-modal: 0 24px 64px oklch(0 0 0 / 38%), 0 2px 8px oklch(0 0 0 / 16%);
+
+  /* ——— Opacidade Dinâmica da Interface ——— */
+  --card-opacity: 0.90;
+  --bubble-opacity: 0.35;
+
+  /* modo claro */
+  --background: oklch(0.982 0.004 250);
+  --foreground: oklch(0.24 0.021 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.021 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.021 250);
+  --primary: oklch(0.66 0.15 62);
+  --primary-foreground: oklch(0.99 0.003 80);
+  --secondary: oklch(0.95 0.005 80);
+  --secondary-foreground: oklch(0.3 0.01 80);
+  --muted: oklch(0.95 0.005 80);
+  --muted-foreground: oklch(0.52 0.01 80);
+  --accent: oklch(0.66 0.15 62);
+  --accent-foreground: oklch(0.99 0.003 80);
+  --accent2: oklch(0.55 0.1 180);
+  --warn: oklch(0.68 0.15 70);
+  --destructive: oklch(0.58 0.2 25);
+  --destructive-foreground: oklch(0.99 0.003 80);
+  --border: oklch(0.9 0.005 80);
+  --line: oklch(0.9 0.005 80);
+  --input: oklch(0.9 0.005 80);
+  --ring: oklch(0.66 0.15 62);
+
+  /* PRO — segue o acento da interface (sem cor própria). */
+  --gradient-pro: var(--gradient-brand);
+
+  --glass-bg: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--card) calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, var(--card) calc(var(--card-opacity, 0.90) * 85%), transparent)
+  );
+  --glass-border: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --grid-line: color-mix(in oklab, var(--foreground) 7%, transparent);
+  --grid-minor: color-mix(in oklab, var(--foreground) 9%, transparent);
+  --grid-major: color-mix(in oklab, var(--foreground) 18%, transparent);
+  --axis-line: color-mix(in oklab, var(--foreground) 38%, transparent);
+  --vision-surface: color-mix(in oklab, var(--card) 94%, var(--accent) 6%);
+  --vision-control: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --vision-control-hover: color-mix(in oklab, var(--accent) 12%, var(--background));
+  --gradient-brand: linear-gradient(120deg, var(--accent), oklch(0.6 0.16 40));
+  --glow-accent:
+    0 0 0 1px color-mix(in oklab, var(--accent) 25%, transparent),
+    0 0 24px color-mix(in oklab, var(--accent) 12%, transparent);
+
+  --sidebar: oklch(0.99 0.003 250);
+  --sidebar-foreground: oklch(0.24 0.021 250);
+  --sidebar-primary: oklch(0.58 0.105 178);
+  --sidebar-primary-foreground: oklch(0.99 0.003 250);
+  --sidebar-accent: oklch(0.95 0.006 250);
+  --sidebar-accent-foreground: oklch(0.3 0.02 250);
+  --sidebar-border: oklch(0.9 0.008 250);
+  --sidebar-ring: oklch(0.58 0.105 178);
+}
+
+.dark {
+  /* grafite / carvão, levemente quente */
+  --background: oklch(0.145 0.006 60);
+  --foreground: oklch(0.935 0.004 80);
+  --card: oklch(0.188 0.006 60);
+  --card-foreground: oklch(0.935 0.004 80);
+  --popover: oklch(0.188 0.006 60);
+  --popover-foreground: oklch(0.935 0.004 80);
+  --primary: oklch(0.77 0.163 70);
+  --primary-foreground: oklch(0.145 0.006 60);
+  --secondary: oklch(0.225 0.006 60);
+  --secondary-foreground: oklch(0.935 0.004 80);
+  --muted: oklch(0.225 0.006 60);
+  --muted-foreground: oklch(0.66 0.008 75);
+  --accent: oklch(0.77 0.163 70); /* âmbar #F59E0B */
+  --accent-foreground: oklch(0.145 0.006 60);
+  --accent2: oklch(0.78 0.11 178); /* turquesa secundária */
+  --warn: oklch(0.79 0.155 70);
+  --destructive: oklch(0.64 0.19 25);
+  --destructive-foreground: oklch(0.98 0.003 80);
+  --border: oklch(0.27 0.006 60);
+  --line: oklch(0.27 0.006 60);
+  --input: oklch(0.27 0.006 60);
+  --ring: oklch(0.77 0.163 70);
+
+  --gradient-pro: var(--gradient-brand);
+
+  --glass-bg: linear-gradient(
+    165deg,
+    color-mix(in oklab, var(--card) calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, var(--card) calc(var(--card-opacity, 0.90) * 75%), transparent)
+  );
+  --glass-border: oklch(1 0 0 / 8%);
+  --grid-line: oklch(1 0 0 / 3.2%);
+  --grid-minor: oklch(1 0 0 / 9%);
+  --grid-major: oklch(1 0 0 / 19%);
+  --axis-line: oklch(1 0 0 / 34%);
+  --vision-surface: color-mix(in oklab, var(--card) 94%, var(--accent) 6%);
+  --vision-control: oklch(1 0 0 / 7%);
+  --vision-control-hover: color-mix(in oklab, var(--accent) 16%, transparent);
+  --gradient-brand: linear-gradient(120deg, var(--accent), oklch(0.66 0.17 42));
+
+  --sidebar: oklch(0.17 0.006 60);
+  --sidebar-foreground: oklch(0.935 0.004 80);
+  --sidebar-primary: oklch(0.77 0.163 70);
+  --sidebar-primary-foreground: oklch(0.145 0.006 60);
+  --sidebar-accent: oklch(0.225 0.006 60);
+  --sidebar-accent-foreground: oklch(0.935 0.004 80);
+  --sidebar-border: oklch(0.27 0.006 60);
+  --sidebar-ring: oklch(0.77 0.163 70);
+}
+
+/* AMOLED — preto puro real; elevação por bordas, não por superfícies claras. */
+.amoled {
+  --background: oklch(0 0 0);
+  --card: oklch(0 0 0);
+  --popover: oklch(0.06 0 0);
+  --secondary: oklch(0.14 0 0);
+  --muted: oklch(0.14 0 0);
+  --muted-foreground: oklch(0.7 0.006 75);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --sidebar: oklch(0 0 0);
+  --line: oklch(1 0 0 / 8%);
+  --panel: oklch(0 0 0);
+  --grid-line: oklch(1 0 0 / 13%);
+  --grid-minor: oklch(1 0 0 / 13%);
+  --grid-major: oklch(1 0 0 / 27%);
+  --axis-line: oklch(1 0 0 / 42%);
+  --vision-surface: oklch(0.075 0 0);
+  --vision-control: oklch(0.13 0 0);
+  --vision-control-hover: color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.vision-dialog {
+  background: var(--vision-surface);
+  color: var(--foreground);
+  border-color: var(--line);
+}
+
+.vision-control {
+  background: var(--vision-control);
+  color: var(--foreground);
+  border: 1px solid var(--line);
+}
+
+.vision-control:hover {
+  background: var(--vision-control-hover);
+}
+.vision-control:active {
+  filter: brightness(0.92);
+}
+.vision-control[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 16%, var(--background));
+}
+.vision-control:disabled {
+  opacity: 0.45;
+}
+
+/* MODO MESTRE — identidade premium: espectro sutil em áreas selecionadas */
+.mestre {
+  --gradient-brand: linear-gradient(
+    120deg,
+    var(--accent),
+    oklch(0.7 0.15 20) 42%,
+    oklch(0.7 0.13 300) 78%,
+    var(--accent2) 100%
+  );
+  --glass-border: color-mix(in oklab, var(--accent) 20%, transparent);
+  --glow-accent:
+    0 0 0 1px color-mix(in oklab, var(--accent) 28%, transparent),
+    0 0 30px color-mix(in oklab, var(--accent) 12%, transparent);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+    background-color: #0A0B0E;
+  }
+  html:not(.dark) {
+    background-color: var(--color-background);
+  }
+
+  body {
+    background-color: #0A0B0E;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  html:not(.dark) body {
+    background-color: var(--color-background);
+  }
+
+  /* Elimina o tap delay de 300ms em dispositivos touch móveis */
+  :where(button, a, input, select, textarea, [role="button"], [role="tab"]) {
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+}
+
+@utility glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(14px);
+}
+
+@utility glow-ring {
+  box-shadow: var(--glow-accent);
+}
+
+@utility grid-bg {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@utility grid-bg-fine {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+@utility brand-gradient {
+  background-image: var(--gradient-brand);
+}
+
+@utility text-brand-gradient {
+  background-image: var(--gradient-brand);
+  background-clip: text;
+  color: transparent;
+}
+
+@utility fade-up {
+  animation: caldra-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility pop-in {
+  animation: caldra-pop-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes caldra-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes caldra-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes caldra-sweep {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+/* superfícies metálicas técnicas — sólidas, com hairline e reflexo discreto */
+@utility metal {
+  background: linear-gradient(
+    168deg,
+    color-mix(in oklab, var(--card) 92%, var(--foreground) 8%),
+    color-mix(in oklab, var(--card) 98%, transparent)
+  );
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent),
+    0 18px 40px -28px oklch(0 0 0 / 90%);
+}
+
+@utility hairline {
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+}
+
+@utility amber-ring {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--accent) 42%, transparent),
+    0 0 26px -6px color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+@utility tick-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* ——— acento cromático selecionável (Âmbar / Azul Real / Magenta) ——— */
+.accent-default {
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+  --accent: var(--foreground);
+  --accent-foreground: var(--background);
+  --accent2: var(--muted-foreground);
+  --ring: var(--foreground);
+  --gradient-brand: linear-gradient(120deg, var(--foreground), var(--muted-foreground));
+}
+
+.accent-blue {
+  --primary: oklch(0.75 0.145 226); /* #00CCFF */
+  --primary-foreground: oklch(0.16 0.01 240);
+  --accent: oklch(0.75 0.145 226);
+  --accent-foreground: oklch(0.16 0.01 240);
+  --accent2: oklch(0.86 0.14 195);
+  --ring: oklch(0.75 0.145 226);
+  --gradient-brand: linear-gradient(120deg, var(--accent), oklch(0.86 0.14 195));
+}
+
+/* Vermelho Carmesim #B22222 — sólido para controles; no escuro o acento ganha luminosidade (#E53935). */
+.accent-crimson,
+.accent-magenta {
+  --primary: #B22222;
+  --primary-foreground: #ffffff;
+  --accent: #B22222;
+  --accent-foreground: #ffffff;
+  --accent2: #D32F2F;
+  --ring: #B22222;
+  --gradient-brand: linear-gradient(120deg, #B22222, #D32F2F);
+}
+
+.dark.accent-crimson,
+.dark.accent-magenta {
+  --primary: #B22222;
+  --primary-foreground: #ffffff;
+  --accent: #E53935; /* Carmesim luminoso legível como texto e realce no escuro */
+  --accent-foreground: #ffffff;
+  --accent2: #EF5350;
+  --ring: #E53935;
+  --gradient-brand: linear-gradient(120deg, #B22222, #E53935);
+}
+
+/* ——— render sólido 3D (estilo CAD) ——— */
+:root {
+  --holo: oklch(0.9 0.16 190);
+  --solid-hi: oklch(0.86 0.02 230); /* aço claro */
+  --solid-lo: oklch(0.5 0.03 240); /* aço sombreado */
+  --solid-edge: oklch(0.24 0.02 240); /* arestas */
+  --solid-in: oklch(0.32 0.02 240); /* superfície interna */
+  --solid-rim: oklch(0.95 0.01 230); /* borda / espessura */
+}
+
+@utility holo-text {
+  color: var(--holo);
+}
+
+@keyframes holo-scan {
+  from {
+    transform: translateY(-120%);
+  }
+  to {
+    transform: translateY(320%);
+  }
+}
+
+@keyframes holo-flicker {
+  0%,
+  100% {
+    opacity: 0.92;
+  }
+  46% {
+    opacity: 0.86;
+  }
+  48% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 0.9;
+  }
+}
+
+@utility holo-stage {
+  position: relative;
+  animation: holo-flicker 5.5s ease-in-out infinite;
+}
+
+@utility holo-scanline {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklab, var(--holo) 26%, transparent),
+    transparent
+  );
+  animation: holo-scan 4.5s linear infinite;
+}
+
+/* ——— fade global entre temas / acentos ——— */
+@keyframes theme-fade {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.theme-fade-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: var(--background);
+  animation: theme-fade 0.55s ease-in-out both;
+}
+
+/* ——— introdução CALDRA ——— */
+@keyframes caldra-draw {
+  from {
+    stroke-dashoffset: 340;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes caldra-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    letter-spacing: 0.5em;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    letter-spacing: 0.14em;
+  }
+}
+
+@keyframes caldra-laser-trace {
+  0% {
+    stroke-dashoffset: 400;
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes caldra-sheen {
+  0% {
+    transform: translateX(-150%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(250%) rotate(25deg);
+  }
+}
+
+@keyframes caldra-pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px color-mix(in oklab, var(--accent) 45%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px color-mix(in oklab, var(--accent) 85%, transparent));
+  }
+}
+
+@keyframes caldra-accent-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px var(--accent));
+    opacity: 0.95;
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px var(--accent));
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* ——— identidade PRO: usa o acento da interface, nunca linguagem técnica ——— */
+@utility pro-gradient {
+  background-image: var(--gradient-pro);
+  color: var(--accent-foreground);
+}
+
+@utility pro-surface {
+  background-color: color-mix(in oklab, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+}
+
+@utility text-pro {
+  color: var(--accent);
+}
+
+/* ——— AURORA CALDRA — fundo do app (versão animada exclusiva PRO) ——— */
+:root {
+  --aurora-base-a: #ffffff;
+  --aurora-base-b: #f8fafc;
+  --aurora-warm: #fde68a;
+  --aurora-warm-deep: #fed7aa;
+  --aurora-magenta: #fbcfe8;
+  --aurora-wine: #fecdd3;
+  --aurora-fuchsia: #f5d0fe;
+  --aurora-indigo: #c7d2fe;
+  --aurora-violet: #ddd6fe;
+  --aurora-blob-opacity: 0.35;
+  --aurora-blur: 130px;
+
+  /* FLUID AURORA — DEEP SPACE LIGHT FIELD */
+  --space-opacity-mult: 0.76;
+}
+
+.aurora-root {
+  display: block;
+}
+
+.dark {
+  --aurora-base-a: #18181b;
+  --aurora-base-b: #111114;
+  --aurora-warm: #f59e0b;
+  --aurora-warm-deep: #b45309;
+  --aurora-magenta: #b22222;
+  --aurora-wine: #7a103c;
+  --aurora-fuchsia: #86198f;
+  --aurora-indigo: #312e81;
+  --aurora-violet: #4c1d95;
+  --aurora-blob-opacity: 0.26;
+  --aurora-blur: 120px;
+
+  /* FLUID AURORA — DEEP SPACE LIGHT FIELD */
+  --space-opacity-mult: 0.88;
+}
+
+/* AMOLED: preto puro é a identidade — o espaço mantém contraste abissal */
+.amoled {
+  --aurora-base-a: #000000;
+  --aurora-base-b: #000000;
+  --aurora-blob-opacity: 0.1;
+  --space-opacity-mult: 0.60;
+}
+
+/* Modo Oficina / alto contraste: luminosidade suave reduzida */
+.oficina .aurora-root,
+.high-contrast .aurora-root {
+  --aurora-blob-opacity: 0.16;
+  --space-opacity-mult: 0.55;
+}
+
+/* =========================================================================
+   FLUID AURORA — DEEP SPACE LIGHT FIELD (MATÉRIA LUMINOSA VIVA)
+   Conceito: Matéria luminosa viva flutuando em espaço profundo com movimento
+   interno orgânico, pontos focais marcantes e hierarquia visual perfeita.
+   Personalidade própria em cada massa: ritmos, escalas, direções e núcleos
+   de luz desacoplados.
+   Performance & Anti-Flicker: 100% acelerado no compositor GPU (translate3d/scale/opacity),
+   will-change consciente, loops contínuos sem cortes (0% e 100% idênticos).
+   ========================================================================= */
+
+.deep-space-container {
+  overflow: hidden;
+  background-color: #04060a;
+  isolation: isolate;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  opacity: var(--space-opacity-mult, 0.85);
+  transition: opacity 0.4s ease;
+}
+
+/* Fundo Base escura profunda e fosca (#04060A → #070B13 → #0C1424) */
+.deep-space-base {
+  background: radial-gradient(
+    140% 120% at 50% 15%,
+    #0c1424 0%,
+    #070b13 45%,
+    #04060a 100%
+  );
+}
+
+.amoled .deep-space-base {
+  background: #000000;
+}
+
+:root:not(.dark) .deep-space-base {
+  background: radial-gradient(
+    140% 120% at 50% 15%,
+    #ffffff 0%,
+    #f4f6fa 45%,
+    #e6ebf2 100%
+  );
+}
+
+/* Camada ambiente contínua — iluminação suave permanente anti-flicker */
+.deep-space-ambient {
+  background: radial-gradient(
+    95% 75% at 50% 45%,
+    rgba(24, 45, 105, 0.22) 0%,
+    rgba(12, 18, 36, 0.12) 55%,
+    transparent 85%
+  );
+  opacity: 0.85;
+}
+
+:root:not(.dark) .deep-space-ambient {
+  background: radial-gradient(
+    95% 75% at 50% 45%,
+    rgba(191, 219, 254, 0.35) 0%,
+    rgba(224, 231, 255, 0.18) 55%,
+    transparent 85%
+  );
+}
+
+/* Campos de luz persistentes no DOM — ORGANIC LIGHT FIELD ESTÁVEL
+   Fórmula Anti-Flicker Absoluta:
+   1. Zero destruição/recriação de camadas (opacidade sempre estável e positiva).
+   2. Zero mix-blend-mode sobre blurs pesados (alpha blending padrão no GPU).
+   3. Blurs suaves e otimizados (gradientes radiais com difusão natural de 5 stops).
+   4. Cores 100% contínuas via aceleração GPU: VERDE, VERMELHO, ROSA, ROXO, AZUL, AMARELO.
+   5. Coordenadas de translação seguras dentro do cache do compositor.
+   ========================================================================= */
+
+.organic-field-container,
+.deep-space-container {
+  overflow: hidden;
+  background-color: #04060a;
+  isolation: isolate;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  opacity: var(--space-opacity-mult, 0.88);
+  transition: opacity 0.4s ease;
+}
+
+.organic-field-base,
+.deep-space-base {
+  background: radial-gradient(
+    140% 120% at 50% 15%,
+    #0c1424 0%,
+    #070b13 45%,
+    #04060a 100%
+  );
+}
+
+.amoled .organic-field-base,
+.amoled .deep-space-base {
+  background: #000000;
+}
+
+:root:not(.dark) .organic-field-base,
+:root:not(.dark) .deep-space-base {
+  background: radial-gradient(
+    140% 120% at 50% 15%,
+    #ffffff 0%,
+    #f4f6fa 45%,
+    #e6ebf2 100%
+  );
+}
+
+.organic-field-ambient,
+.deep-space-ambient {
+  background: radial-gradient(
+    95% 75% at 50% 45%,
+    rgba(24, 45, 105, 0.20) 0%,
+    rgba(12, 18, 36, 0.10) 55%,
+    transparent 85%
+  );
+  opacity: 0.85;
+  transition: opacity 2s ease, transform 2.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root:not(.dark) .organic-field-ambient,
+:root:not(.dark) .deep-space-ambient {
+  background: radial-gradient(
+    95% 75% at 50% 45%,
+    rgba(191, 219, 254, 0.35) 0%,
+    rgba(224, 231, 255, 0.18) 55%,
+    transparent 85%
+  );
+}
+
+/* Massas orgânicas persistentes no DOM */
+.organic-mass,
+.deep-space-field {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transition: top 2.6s cubic-bezier(0.16, 1, 0.3, 1),
+              left 2.6s cubic-bezier(0.16, 1, 0.3, 1),
+              width 2.6s cubic-bezier(0.16, 1, 0.3, 1),
+              height 2.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Corpo da massa: deforma organicamente e interpola as 6 cores */
+.mass-body,
+.field-body {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  will-change: transform, filter;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+/* Respiração e migração fluida do centro interno */
+.mass-inner,
+.field-inner {
+  position: absolute;
+  inset: -12%;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transition: filter 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Núcleos de luz viva — pontos focais com micro-deslocamento */
+.mass-core,
+.field-core-primary,
+.field-core-secondary {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transition: filter 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =========================================================================
+   1. ENTIDADE DELTA — O Oceano Abissal (Fundo Perene Azul & Verde Esmeralda)
+   Tamanho: 76vmax, período: 44s. Ancoragem de profundidade atmosférica estável.
+   ========================================================================= */
+.mass-delta,
+.field-entity-delta {
+  top: 0;
+  left: 0;
+  width: 76vmax;
+  height: 62vmax;
+}
+
+.body-delta,
+.field-body-delta {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(29, 78, 216, 0.40) 0%,     /* Azul Real */
+    rgba(14, 165, 233, 0.30) 28%,    /* Azul */
+    rgba(16, 185, 129, 0.18) 55%,    /* Verde */
+    rgba(12, 20, 50, 0.08) 78%,      /* Profundidade */
+    transparent 86%
+  );
+  filter: blur(28px);
+  animation:
+    organic-morph-delta 44s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite,
+    chroma-delta 54s linear infinite;
+}
+
+.inner-delta,
+.field-inner-delta {
+  background: radial-gradient(
+    ellipse at 52% 48%,
+    rgba(29, 78, 216, 0.24) 0%,     /* Azul Real */
+    rgba(14, 165, 233, 0.12) 48%,    /* Azul */
+    transparent 70%
+  );
+  animation: organic-inner-delta 18s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite;
+}
+
+.core-delta,
+.field-core-delta {
+  top: 30%;
+  left: 30%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(96, 165, 250, 0.32) 0%,
+    rgba(30, 64, 175, 0.14) 40%,
+    transparent 70%
+  );
+  filter: blur(16px);
+  animation: organic-core-delta 12s cubic-bezier(0.40, 0.05, 0.60, 0.95) infinite;
+}
+
+/* =========================================================================
+   2. ENTIDADE BETA — A Nebulosa Violeta & Magenta (Roxo, Magenta, Carmesim, Rosa)
+   Tamanho: 60vmax. Sobe, funde dinamicamente e explora todo o campo.
+   ========================================================================= */
+.mass-beta,
+.field-entity-beta {
+  top: 0;
+  left: 0;
+  width: 60vmax;
+  height: 50vmax;
+}
+
+.body-beta,
+.field-body-beta {
+  background: radial-gradient(
+    ellipse at 48% 52%,
+    rgba(124, 58, 237, 0.45) 0%,    /* Roxo */
+    rgba(217, 70, 239, 0.34) 28%,   /* Magenta */
+    rgba(153, 27, 27, 0.22) 54%,    /* Vermelho Carmesim */
+    rgba(244, 63, 94, 0.12) 72%,    /* Rosa */
+    transparent 86%
+  );
+  filter: blur(22px);
+  animation:
+    organic-morph-beta 32s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite,
+    chroma-beta 42s linear infinite;
+}
+
+.inner-beta,
+.field-inner-beta {
+  background: radial-gradient(
+    ellipse at 44% 56%,
+    rgba(232, 121, 249, 0.28) 0%,   /* Magenta Claro */
+    rgba(147, 51, 234, 0.14) 44%,   /* Roxo */
+    transparent 68%
+  );
+  animation: organic-inner-beta 10.5s cubic-bezier(0.45, 0.04, 0.55, 0.96) infinite;
+}
+
+.core-beta-1,
+.field-core-beta-1 {
+  top: 28%;
+  left: 28%;
+  width: 44%;
+  height: 44%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(244, 114, 182, 0.40) 0%,   /* Rosa */
+    rgba(168, 85, 247, 0.20) 38%,   /* Roxo */
+    transparent 70%
+  );
+  filter: blur(14px);
+  animation: organic-core-beta-1 7.6s cubic-bezier(0.40, 0.06, 0.60, 0.94) infinite;
+}
+
+.core-beta-2,
+.field-core-beta-2 {
+  top: 25%;
+  left: 25%;
+  width: 36%;
+  height: 36%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(217, 70, 239, 0.38) 0%,    /* Magenta */
+    rgba(153, 27, 27, 0.18) 36%,    /* Vermelho Carmesim */
+    transparent 70%
+  );
+  filter: blur(12px);
+  animation: organic-core-beta-2 32s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite;
+}
+
+/* =========================================================================
+   3. ENTIDADE ALFA — O Coração Azul Real & Ciano (Azul Real, Azul, Verde, Amarelo)
+   Tamanho: 56vmax. Grandes travessias transversais e diagonais completas.
+   ========================================================================= */
+.mass-alpha,
+.field-entity-alpha {
+  top: 0;
+  left: 0;
+  width: 56vmax;
+  height: 46vmax;
+}
+
+.body-alpha,
+.field-body-alpha {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(0, 102, 255, 0.46) 0%,     /* Azul Real */
+    rgba(14, 165, 233, 0.35) 30%,   /* Azul */
+    rgba(16, 185, 129, 0.20) 58%,   /* Verde */
+    rgba(250, 204, 21, 0.10) 74%,   /* Amarelo */
+    transparent 86%
+  );
+  filter: blur(20px);
+  animation:
+    organic-morph-alpha 32s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite,
+    chroma-alpha 46s linear infinite;
+}
+
+.inner-alpha,
+.field-inner-alpha {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(56, 189, 248, 0.36) 0%,    /* Azul */
+    rgba(0, 102, 255, 0.18) 36%,    /* Azul Real */
+    transparent 70%
+  );
+  animation: organic-inner-alpha 10.2s cubic-bezier(0.40, 0.02, 0.60, 0.98) infinite;
+}
+
+.core-alpha-1,
+.field-core-alpha-1 {
+  top: 26%;
+  left: 26%;
+  width: 48%;
+  height: 48%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(165, 243, 252, 0.45) 0%,   /* Ciano */
+    rgba(14, 165, 233, 0.25) 38%,   /* Azul */
+    transparent 72%
+  );
+  filter: blur(14px);
+  animation: organic-core-alpha-1 6.8s cubic-bezier(0.42, 0.05, 0.58, 0.95) infinite;
+}
+
+.core-alpha-2,
+.field-core-alpha-2 {
+  top: 30%;
+  left: 30%;
+  width: 38%;
+  height: 38%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(52, 211, 153, 0.38) 0%,    /* Verde Esmeralda */
+    rgba(250, 204, 21, 0.18) 36%,   /* Amarelo */
+    transparent 70%
+  );
+  filter: blur(12px);
+  animation: organic-core-alpha-2 32s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite;
+}
+
+/* =========================================================================
+   4. ENTIDADE GAMA — O Manto Carmesim, Rosa & Âmbar (Vermelho Carmesim, Âmbar, Rosa)
+   Tamanho: 50vmax. Viagens completas borda a borda e diagonais livres.
+   ========================================================================= */
+.mass-gama,
+.field-entity-gama {
+  top: 0;
+  left: 0;
+  width: 50vmax;
+  height: 42vmax;
+}
+
+.body-gama,
+.field-body-gama {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(153, 27, 27, 0.46) 0%,     /* Vermelho Carmesim */
+    rgba(239, 68, 68, 0.32) 28%,    /* Vermelho */
+    rgba(245, 158, 11, 0.24) 52%,   /* Âmbar */
+    rgba(244, 63, 94, 0.16) 72%,    /* Rosa */
+    transparent 86%
+  );
+  filter: blur(22px);
+  animation:
+    organic-morph-gama 36s cubic-bezier(0.42, 0.03, 0.58, 0.97) infinite,
+    chroma-gama 40s linear infinite;
+}
+
+.inner-gama,
+.field-inner-gama {
+  background: radial-gradient(
+    ellipse at 48% 52%,
+    rgba(251, 113, 133, 0.26) 0%,   /* Rosa */
+    rgba(153, 27, 27, 0.14) 46%,    /* Vermelho Carmesim */
+    transparent 68%
+  );
+  animation: organic-inner-gama 12s cubic-bezier(0.42, 0.05, 0.58, 0.95) infinite;
+}
+
+.core-gama-1,
+.field-core-gama-1 {
+  top: 26%;
+  left: 26%;
+  width: 46%;
+  height: 46%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(253, 164, 175, 0.36) 0%,   /* Rosa claro */
+    rgba(239, 68, 68, 0.18) 38%,    /* Vermelho */
+    transparent 70%
+  );
+  filter: blur(14px);
+  animation: organic-core-gama-1 9.2s cubic-bezier(0.44, 0.05, 0.56, 0.95) infinite;
+}
+
+.core-gama-2,
+.field-core-gama-2 {
+  top: 28%;
+  left: 28%;
+  width: 38%;
+  height: 38%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(245, 158, 11, 0.34) 0%,    /* Âmbar */
+    rgba(250, 204, 21, 0.18) 36%,   /* Amarelo */
+    transparent 70%
+  );
+  filter: blur(12px);
+  animation: organic-core-gama-2 36s cubic-bezier(0.42, 0.03, 0.58, 0.97) infinite;
+}
+
+/* =========================================================================
+   5. ENTIDADE ÉPSILON — A Centelha Dourada & Celeste (Âmbar, Amarelo, Magenta, Azul Real)
+   Tamanho: 34vmax. Voo livre transversal ágil e luminoso.
+   ========================================================================= */
+.mass-epsilon,
+.field-entity-epsilon {
+  top: 0;
+  left: 0;
+  width: 34vmax;
+  height: 28vmax;
+}
+
+.body-epsilon,
+.field-body-epsilon {
+  background: radial-gradient(
+    ellipse at 48% 52%,
+    rgba(245, 158, 11, 0.50) 0%,    /* Âmbar */
+    rgba(250, 204, 21, 0.36) 26%,   /* Amarelo */
+    rgba(217, 70, 239, 0.24) 50%,   /* Magenta */
+    rgba(29, 78, 216, 0.16) 72%,    /* Azul Real */
+    transparent 85%
+  );
+  filter: blur(16px);
+  animation:
+    organic-morph-epsilon 22s cubic-bezier(0.44, 0.04, 0.56, 0.96) infinite,
+    chroma-epsilon 28s linear infinite;
+}
+
+.inner-epsilon,
+.field-inner-epsilon {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(254, 240, 138, 0.34) 0%,   /* Amarelo claro */
+    rgba(245, 158, 11, 0.16) 38%,   /* Âmbar */
+    transparent 65%
+  );
+  animation: organic-inner-epsilon 6.2s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite;
+}
+
+.core-epsilon,
+.field-core-epsilon {
+  top: 24%;
+  left: 24%;
+  width: 52%;
+  height: 52%;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(254, 240, 138, 0.44) 0%,
+    rgba(56, 189, 248, 0.24) 36%,   /* Azul */
+    transparent 70%
+  );
+  filter: blur(10px);
+  animation: organic-core-epsilon 4.8s cubic-bezier(0.42, 0.04, 0.58, 0.96) infinite;
+}
+
+/* =========================================================================
+   VINHETA CINEMATOGRÁFICA DE ALTO CONTRASTE E LEGIBILIDADE
+   ========================================================================= */
+.organic-field-vignette,
+.deep-space-vignette {
+  background: radial-gradient(
+    ellipse 115% 95% at 50% 50%,
+    transparent 46%,
+    rgba(4, 6, 10, 0.45) 78%,
+    rgba(3, 4, 8, 0.78) 100%
+  );
+  z-index: 2;
+}
+
+:root:not(.dark) .organic-field-vignette,
+:root:not(.dark) .deep-space-vignette {
+  background: radial-gradient(
+    ellipse 115% 95% at 50% 50%,
+    transparent 50%,
+    rgba(241, 245, 249, 0.35) 80%,
+    rgba(226, 232, 240, 0.68) 100%
+  );
+}
+
+.amoled .organic-field-vignette,
+.amoled .deep-space-vignette {
+  background: radial-gradient(
+    ellipse 115% 95% at 50% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 76%,
+    rgba(0, 0, 0, 0.88) 100%
+  );
+}
+
+/* =========================================================================
+   ESTADO HÍBRIDO DE PROCESSAMENTO DE IA (ORGANIC LIGHT FIELD IA MODE)
+   Transição contínua e serena para estado de concentração superior com
+   ondas lentas e crista luminosa. ZERO FLICKER / ZERO PISCADA.
+   ========================================================================= */
+
+/* 1. Crista luminosa superior — difusão ampla e profunda */
+.ai-processing-crest {
+  position: absolute;
+  top: 0;
+  inset-x: 0;
+  height: 46vh;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    115% 90% at 50% -12%,
+    rgba(56, 189, 248, 0.24) 0%,
+    rgba(129, 140, 248, 0.16) 36%,
+    rgba(168, 85, 247, 0.08) 65%,
+    transparent 90%
+  );
+  filter: blur(32px);
+  -webkit-filter: blur(32px);
+  transform: translate3d(0, -16px, 0);
+  will-change: opacity, transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: opacity 2.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 3.2s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+:root:not(.dark) .ai-processing-crest {
+  background: radial-gradient(
+    115% 90% at 50% -12%,
+    rgba(147, 197, 253, 0.30) 0%,
+    rgba(199, 210, 254, 0.18) 36%,
+    rgba(233, 213, 255, 0.10) 65%,
+    transparent 90%
+  );
+}
+
+.amoled .ai-processing-crest {
+  background: radial-gradient(
+    115% 90% at 50% -12%,
+    rgba(14, 165, 233, 0.28) 0%,
+    rgba(99, 102, 241, 0.18) 36%,
+    rgba(147, 51, 234, 0.08) 65%,
+    transparent 90%
+  );
+}
+
+.organic-field-container[data-processing="active"] .ai-processing-crest {
+  opacity: 0.88;
+  transform: translate3d(0, 0, 0);
+  animation: ai-crest-respiration 12s ease-in-out infinite alternate;
+}
+
+/* 2. Ondas suaves de energia no terço superior */
+.ai-processing-waves {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.07) 0%,
+    rgba(139, 92, 246, 0.04) 28%,
+    rgba(30, 58, 138, 0.02) 55%,
+    transparent 80%
+  );
+  will-change: opacity, transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: opacity 3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+.organic-field-container[data-processing="active"] .ai-processing-waves {
+  opacity: 0.65;
+  animation: ai-energy-drift 16s ease-in-out infinite alternate;
+}
+
+/* 3. Despertar luminoso gradual e expansão de halos (sem piscar nem cortar filtros) */
+.organic-field-container[data-processing="active"] .organic-field-ambient {
+  opacity: 1;
+}
+
+.organic-field-container[data-processing="active"] .mass-body {
+  opacity: 1;
+}
+
+.organic-field-container[data-processing="active"] .mass-inner {
+  opacity: 0.95;
+}
+
+/* 4. Keyframes majestosos sem modulação de blur e sem saltos de opacidade */
+@keyframes ai-crest-respiration {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, 8px, 0) scale(1.025);
+  }
+  100% {
+    transform: translate3d(0, -4px, 0) scale(1.01);
+  }
+}
+
+@keyframes ai-energy-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 2.5vh, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* =========================================================================
+   KEYFRAMES DE INTERPOLAÇÃO CROMÁTICA CONTÍNUA (10 CORES VIVAS E ORGÂNICAS)
+   100% Acelerado no Fragment Shader GPU via hue-rotate contínuo (zero flicker).
+   Paleta: VERDE, AZUL, AZUL REAL, ROXO, MAGENTA, ROSA, VERMELHO,
+           VERMELHO CARMESIM, AMARELO, ÂMBAR.
+   ========================================================================= */
+
+@keyframes chroma-alpha {
+  0% {
+    /* AZUL REAL & AZUL */
+    filter: hue-rotate(0deg) blur(20px);
+  }
+  18% {
+    /* AZUL → AZUL REAL → ROXO */
+    filter: hue-rotate(36deg) blur(20px);
+  }
+  38% {
+    /* ROXO → MAGENTA → ROSA */
+    filter: hue-rotate(96deg) blur(20px);
+  }
+  56% {
+    /* VERMELHO → VERMELHO CARMESIM */
+    filter: hue-rotate(152deg) blur(20px);
+  }
+  74% {
+    /* AMARELO → ÂMBAR */
+    filter: hue-rotate(224deg) blur(20px);
+  }
+  88% {
+    /* ÂMBAR → VERDE */
+    filter: hue-rotate(300deg) blur(20px);
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(20px);
+  }
+}
+
+@keyframes chroma-beta {
+  0% {
+    /* ROXO & MAGENTA */
+    filter: hue-rotate(0deg) blur(22px);
+  }
+  20% {
+    /* ROXO → MAGENTA → ROSA */
+    filter: hue-rotate(42deg) blur(22px);
+  }
+  42% {
+    /* VERMELHO → VERMELHO CARMESIM → MAGENTA */
+    filter: hue-rotate(90deg) blur(22px);
+  }
+  62% {
+    /* AMARELO → ÂMBAR → VERMELHO */
+    filter: hue-rotate(164deg) blur(22px);
+  }
+  82% {
+    /* VERDE → AMARELO → ÂMBAR */
+    filter: hue-rotate(264deg) blur(22px);
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(22px);
+  }
+}
+
+@keyframes chroma-gama {
+  0% {
+    /* VERMELHO CARMESIM & ÂMBAR */
+    filter: hue-rotate(0deg) blur(22px);
+  }
+  22% {
+    /* VERMELHO → VERMELHO CARMESIM → MAGENTA */
+    filter: hue-rotate(48deg) blur(22px);
+  }
+  44% {
+    /* VERDE → AMARELO → ÂMBAR */
+    filter: hue-rotate(114deg) blur(22px);
+  }
+  66% {
+    /* AZUL → AZUL REAL → ROXO */
+    filter: hue-rotate(204deg) blur(22px);
+  }
+  86% {
+    /* ROXO → MAGENTA → ROSA */
+    filter: hue-rotate(292deg) blur(22px);
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(22px);
+  }
+}
+
+@keyframes chroma-delta {
+  0% {
+    /* AZUL REAL & AZUL profundo */
+    filter: hue-rotate(0deg) blur(26px);
+  }
+  30% {
+    /* AZUL REAL → ROXO */
+    filter: hue-rotate(52deg) blur(26px);
+  }
+  60% {
+    /* VERDE esmeralda & ÂMBAR abissal */
+    filter: hue-rotate(178deg) blur(26px);
+  }
+  84% {
+    /* AZUL & AZUL REAL oceânico */
+    filter: hue-rotate(290deg) blur(26px);
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(26px);
+  }
+}
+
+@keyframes chroma-epsilon {
+  0% {
+    /* ÂMBAR & AMARELO radiante */
+    filter: hue-rotate(0deg) blur(16px);
+  }
+  22% {
+    /* VERDE → AMARELO → ÂMBAR */
+    filter: hue-rotate(58deg) blur(16px);
+  }
+  44% {
+    /* AZUL → AZUL REAL → ROXO */
+    filter: hue-rotate(144deg) blur(16px);
+  }
+  66% {
+    /* ROXO → MAGENTA → ROSA */
+    filter: hue-rotate(234deg) blur(16px);
+  }
+  85% {
+    /* VERMELHO → VERMELHO CARMESIM */
+    filter: hue-rotate(312deg) blur(16px);
+  }
+  100% {
+    filter: hue-rotate(360deg) blur(16px);
+  }
+}
+
+/* =========================================================================
+   KEYFRAMES MACRO DE TRAJETÓRIAS — VIAJAM POR TODA A TELA (COORDENADAS SEGURAS)
+   Zero perda de tiles, zero tela preta, zero resets bruscos.
+   ========================================================================= */
+
+/* ALFA (32s): noroeste -> centro (FUSÃO COM BETA) -> nordeste -> borda superior */
+@keyframes organic-voyage-alpha {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.82;
+  }
+  16% {
+    transform: translate3d(7vw, 5vh, 0);
+    opacity: 0.85;
+  }
+  26% {
+    /* Aproximação de Beta no centro */
+    transform: translate3d(14vw, 13vh, 0);
+    opacity: 0.88;
+  }
+  36% {
+    /* Contato e Fusão com Beta no Centro da tela */
+    transform: translate3d(19vw, 20vh, 0);
+    opacity: 0.94;
+  }
+  48% {
+    /* Supermassa unificada */
+    transform: translate3d(20vw, 21vh, 0);
+    opacity: 0.94;
+  }
+  58% {
+    /* Início da separação para o nordeste */
+    transform: translate3d(25vw, 10vh, 0);
+    opacity: 0.86;
+  }
+  72% {
+    /* Viagem livre pela orla superior/nordeste */
+    transform: translate3d(22vw, -4vh, 0);
+    opacity: 0.78;
+  }
+  86% {
+    /* Curva descendente de retorno */
+    transform: translate3d(9vw, -2vh, 0);
+    opacity: 0.80;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.82;
+  }
+}
+
+/* DEFORMAÇÃO E MORFOLOGIA DE FUSÃO DE ALFA (32s) */
+@keyframes organic-morph-alpha {
+  0% {
+    transform: scale(1, 1);
+  }
+  16% {
+    transform: scale(1.05, 0.96);
+  }
+  26% {
+    /* Tensão fluida de aproximação: estica na direção de Beta */
+    transform: scale(1.24, 0.82);
+  }
+  36%, 46% {
+    /* Expansão compartilhada na supermassa */
+    transform: scale(1.36, 1.28);
+  }
+  54% {
+    /* Estiramento elástico na separação */
+    transform: scale(0.84, 1.28);
+  }
+  68% {
+    /* Recoil pós-separação */
+    transform: scale(1.12, 0.92);
+  }
+  84% {
+    transform: scale(0.96, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* BETA (32s): sudeste -> centro (FUSÃO COM ALFA) -> sudoeste -> encontro com Gama */
+@keyframes organic-voyage-beta {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.78;
+  }
+  16% {
+    transform: translate3d(-5vw, -6vh, 0);
+    opacity: 0.82;
+  }
+  26% {
+    /* Aproximação de Alfa */
+    transform: translate3d(-12vw, -13vh, 0);
+    opacity: 0.86;
+  }
+  36% {
+    /* Contato no centro */
+    transform: translate3d(-17vw, -18vh, 0);
+    opacity: 0.94;
+  }
+  48% {
+    /* Supermassa unificada */
+    transform: translate3d(-18vw, -19vh, 0);
+    opacity: 0.94;
+  }
+  58% {
+    /* Separação para a direção oposta (sudoeste) */
+    transform: translate3d(-24vw, -8vh, 0);
+    opacity: 0.86;
+  }
+  72% {
+    /* Encontro tangencial com a Entidade Gama no sul */
+    transform: translate3d(-20vw, 4vh, 0);
+    opacity: 0.88;
+  }
+  86% {
+    /* Retorno suave em arco pelo sul */
+    transform: translate3d(-8vw, 2vh, 0);
+    opacity: 0.80;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.78;
+  }
+}
+
+/* DEFORMAÇÃO E MORFOLOGIA DE FUSÃO DE BETA (32s) */
+@keyframes organic-morph-beta {
+  0% {
+    transform: scale(1, 1);
+  }
+  16% {
+    transform: scale(0.96, 1.05);
+  }
+  26% {
+    /* Tensão fluida vertical de atração */
+    transform: scale(0.82, 1.24);
+  }
+  36%, 46% {
+    /* Expansão compartilhada na supermassa */
+    transform: scale(1.34, 1.30);
+  }
+  54% {
+    /* Estiramento no eixo de fuga */
+    transform: scale(1.26, 0.84);
+  }
+  72% {
+    /* Deformação ao cruzar com Gama */
+    transform: scale(1.15, 0.88);
+  }
+  86% {
+    transform: scale(0.96, 1.05);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* GAMA (36s): travessia sul oeste -> leste -> tangência com Beta -> centro */
+@keyframes organic-voyage-gama {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.76;
+  }
+  20% {
+    transform: translate3d(12vw, -2vh, 0);
+    opacity: 0.80;
+  }
+  38% {
+    /* Interação com Beta no sul */
+    transform: translate3d(24vw, 3vh, 0);
+    opacity: 0.88;
+  }
+  56% {
+    /* Subida diagonal pelo centro-leste */
+    transform: translate3d(18vw, -16vh, 0);
+    opacity: 0.80;
+  }
+  76% {
+    /* Travessia pelo centro-norte */
+    transform: translate3d(6vw, -12vh, 0);
+    opacity: 0.74;
+  }
+  88% {
+    transform: translate3d(-2vw, -4vh, 0);
+    opacity: 0.76;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.76;
+  }
+}
+
+@keyframes organic-morph-gama {
+  0% {
+    transform: scale(1, 1);
+  }
+  20% {
+    transform: scale(1.08, 0.94);
+  }
+  38% {
+    /* Deformação de confluência ao tocar a passagem de Beta */
+    transform: scale(1.24, 0.82);
+  }
+  56% {
+    transform: scale(0.92, 1.10);
+  }
+  76% {
+    transform: scale(1.08, 0.94);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* DELTA (44s): O Oceano Abissal — ampla, serena e atmosférica */
+@keyframes organic-voyage-delta {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.82;
+  }
+  24% {
+    transform: translate3d(5vw, 4vh, 0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(8vw, 6vh, 0);
+    opacity: 0.88;
+  }
+  74% {
+    transform: translate3d(3vw, 9vh, 0);
+    opacity: 0.82;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.82;
+  }
+}
+
+@keyframes organic-morph-delta {
+  0% {
+    transform: scale(1, 1);
+  }
+  28% {
+    transform: scale(1.05, 0.96);
+  }
+  54% {
+    transform: scale(0.96, 1.05);
+  }
+  78% {
+    transform: scale(1.04, 0.97);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* ÉPSILON (22s): Centelha Celeste ágil em voo livre */
+@keyframes organic-voyage-epsilon {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.78;
+  }
+  22% {
+    /* Mergulha na orla de Alfa */
+    transform: translate3d(-14vw, 10vh, 0);
+    opacity: 0.86;
+  }
+  44% {
+    /* Corta o centro da tela */
+    transform: translate3d(-24vw, 26vh, 0);
+    opacity: 0.80;
+  }
+  68% {
+    /* Sobe para o oeste */
+    transform: translate3d(-34vw, 12vh, 0);
+    opacity: 0.84;
+  }
+  86% {
+    transform: translate3d(-15vw, -4vh, 0);
+    opacity: 0.82;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.78;
+  }
+}
+
+@keyframes organic-morph-epsilon {
+  0% {
+    transform: scale(1, 1);
+  }
+  25% {
+    transform: scale(1.15, 0.86);
+  }
+  50% {
+    transform: scale(0.88, 1.18);
+  }
+  75% {
+    transform: scale(1.10, 0.92);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+/* =========================================================================
+   KEYFRAMES DE LUZ INTERNA — RESPIRAÇÃO ORGÂNICA E ÓRBITA DE NÚCLEOS
+   ========================================================================= */
+
+@keyframes organic-inner-alpha {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.80;
+  }
+  35% {
+    transform: translate3d(7%, 6%, 0) scale(1.14, 0.90);
+    opacity: 0.90;
+  }
+  70% {
+    transform: translate3d(-5%, -4%, 0) scale(0.90, 1.12);
+    opacity: 0.76;
+  }
+}
+
+@keyframes organic-inner-beta {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.78;
+  }
+  38% {
+    transform: translate3d(-6%, -7%, 0) scale(1.12, 0.88);
+    opacity: 0.88;
+  }
+  72% {
+    transform: translate3d(7%, 5%, 0) scale(0.88, 1.15);
+    opacity: 0.74;
+  }
+}
+
+@keyframes organic-inner-gama {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.76;
+  }
+  42% {
+    transform: translate3d(6%, 5%, 0) scale(1.12, 0.90);
+    opacity: 0.84;
+  }
+  78% {
+    transform: translate3d(-5%, -4%, 0) scale(0.92, 1.12);
+    opacity: 0.72;
+  }
+}
+
+@keyframes organic-inner-delta {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.78;
+  }
+  50% {
+    transform: translate3d(-6%, 5%, 0) scale(1.10, 0.92);
+    opacity: 0.85;
+  }
+}
+
+@keyframes organic-inner-epsilon {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.80;
+  }
+  45% {
+    transform: translate3d(-8%, -5%, 0) scale(1.18, 0.85);
+    opacity: 0.88;
+  }
+}
+
+/* ÓRBITAS DOS NÚCLEOS INTERNOS */
+@keyframes organic-core-alpha-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.75;
+  }
+  36% {
+    transform: translate3d(10%, 8%, 0) scale(1.15);
+    opacity: 0.88;
+  }
+  68% {
+    transform: translate3d(-6%, -5%, 0) scale(0.90);
+    opacity: 0.68;
+  }
+}
+
+/* Núcleo Alfa 2 migra para o ponto de fusão com Beta */
+@keyframes organic-core-alpha-2 {
+  0%, 20% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.68;
+  }
+  36%, 48% {
+    transform: translate3d(20%, 18%, 0) scale(1.20);
+    opacity: 0.88;
+  }
+  60% {
+    transform: translate3d(3%, 2%, 0) scale(0.92);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.68;
+  }
+}
+
+@keyframes organic-core-beta-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+  40% {
+    transform: translate3d(-8%, -6%, 0) scale(1.14);
+    opacity: 0.85;
+  }
+  75% {
+    transform: translate3d(6%, 5%, 0) scale(0.90);
+    opacity: 0.65;
+  }
+}
+
+/* Núcleo Beta 2 migra para a zona de fusão com Alfa */
+@keyframes organic-core-beta-2 {
+  0%, 20% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.68;
+  }
+  36%, 48% {
+    transform: translate3d(-18%, -15%, 0) scale(1.20);
+    opacity: 0.88;
+  }
+  60% {
+    transform: translate3d(-3%, -2%, 0) scale(0.92);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.68;
+  }
+}
+
+@keyframes organic-core-gama-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.68;
+  }
+  42% {
+    transform: translate3d(8%, 6%, 0) scale(1.12);
+    opacity: 0.80;
+  }
+  76% {
+    transform: translate3d(-6%, -5%, 0) scale(0.90);
+    opacity: 0.62;
+  }
+}
+
+@keyframes organic-core-gama-2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.65;
+  }
+  36% {
+    transform: translate3d(-10%, -6%, 0) scale(1.14);
+    opacity: 0.78;
+  }
+  72% {
+    transform: translate3d(7%, 5%, 0) scale(0.88);
+    opacity: 0.58;
+  }
+}
+
+@keyframes organic-core-delta {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.68;
+  }
+  50% {
+    transform: translate3d(6%, 5%, 0) scale(1.12);
+    opacity: 0.80;
+  }
+}
+
+@keyframes organic-core-epsilon {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.72;
+  }
+  48% {
+    transform: translate3d(-10%, -6%, 0) scale(1.18);
+    opacity: 0.86;
+  }
+}
+
+/* =========================================================================
+   CONTROLE DE ACESSIBILIDADE E ECONOMIA DE RECURSOS
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .organic-mass,
+  .deep-space-field,
+  .mass-body,
+  .field-body,
+  .mass-inner,
+  .field-inner,
+  .mass-core,
+  .field-core-primary,
+  .field-core-secondary,
+  .ai-processing-crest,
+  .ai-processing-waves {
+    animation: none !important;
+    will-change: auto;
+  }
+}
+
+.aurora-root[data-animated="off"] .organic-mass,
+.aurora-root[data-animated="off"] .deep-space-field,
+.aurora-root[data-animated="off"] .mass-body,
+.aurora-root[data-animated="off"] .field-body,
+.aurora-root[data-animated="off"] .mass-inner,
+.aurora-root[data-animated="off"] .field-inner,
+.aurora-root[data-animated="off"] .mass-core,
+.aurora-root[data-animated="off"] .field-core-primary,
+.aurora-root[data-animated="off"] .field-core-secondary,
+.aurora-root[data-animated="off"] .ai-processing-crest,
+.aurora-root[data-animated="off"] .ai-processing-waves {
+  animation: none !important;
+  will-change: auto;
+}
+
+/* Rota sem Aurora (editor CHAMFER): oculto sem destruir o contexto WebGL. */
+.aurora-root[data-active="off"] {
+  visibility: hidden;
+}
+
+/* AURORA 2.0 — FLUIDO usa o shader; SUAVE usa o motor CSS Fluid Aurora (Deep Space Light Field). */
+.aurora-root[data-style="fluido"] .aurora-css {
+  display: none;
+}
+.aurora-root[data-style="suave"] .aurora-gl {
+  display: none;
+}
+.oficina .aurora-root .aurora-gl,
+.high-contrast .aurora-root .aurora-gl {
+  opacity: 0.75;
+}
+.aurora-root .aurora-gl {
+  transition: opacity 320ms ease;
+}
+
+/* ═══════════ DESIGN SYSTEM CALDRA — Parte 2 ═══════════
+   Tipografia, estados, carregamento e erro. Tokens únicos: nenhum
+   componente define tamanho, peso ou espaçamento próprio fora daqui. */
+
+:root {
+  --ds-eyebrow: 0.18em;
+  --ds-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* — escala tipográfica — */
+@utility t-display {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 1.2rem + 2vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility t-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+@utility t-subtitle {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+@utility t-body {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+@utility t-caption {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+@utility t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: var(--ds-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility t-numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* — estados universais — */
+@layer base {
+  :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--accent) 70%, transparent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  :where(button, a, [role="button"]):disabled,
+  :where(button, a, [role="button"])[aria-disabled="true"] {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* — carregamento — */
+@keyframes ds-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility ds-skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--foreground) 5%, transparent) 0%,
+      color-mix(in oklab, var(--foreground) 11%, transparent) 50%,
+      color-mix(in oklab, var(--foreground) 5%, transparent) 100%
+    )
+    0 0 / 200% 100%;
+  animation: ds-shimmer 1.4s linear infinite;
+}
+
+@keyframes ds-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility ds-spinner {
+  border-radius: 9999px;
+  border: 2px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+  border-top-color: var(--accent);
+  animation: ds-spin 0.7s linear infinite;
+}
+
+/* ——— MOTION SYSTEM CALDRA ———
+   FAST: 120–160ms (140ms)
+   NORMAL: 180–240ms (200ms)
+   PANEL: 220–300ms (260ms)
+   COMPLEX: max 400ms (350ms)
+   Prioridade absoluta: transform e opacity sem layout thrashing */
+
+@utility motion-fast {
+  transition-duration: var(--motion-fast);
+  transition-timing-function: var(--ease-natural);
+}
+
+@utility motion-normal {
+  transition-duration: var(--motion-normal);
+  transition-timing-function: var(--ease-natural);
+}
+
+@utility motion-panel {
+  transition-duration: var(--motion-panel);
+  transition-timing-function: var(--ease-panel);
+}
+
+@utility motion-complex {
+  transition-duration: var(--motion-complex);
+  transition-timing-function: var(--ease-natural);
+}
+
+@utility active-press {
+  transition: transform var(--motion-fast) var(--ease-natural),
+              opacity var(--motion-fast) var(--ease-natural),
+              filter var(--motion-fast) var(--ease-natural),
+              background-color var(--motion-fast) var(--ease-natural),
+              border-color var(--motion-fast) var(--ease-natural);
+
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+}
+
+@utility touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .ds-skeleton,
+  .ds-spinner {
+    animation-duration: 0s !important;
+  }
+}
+
+/* =========================================================================
+   SISTEMA DE TEMAS E OPACIDADE DINÂMICA CALDRA
+   ========================================================================= */
+
+/* Cartões com transparência controlada por --card-opacity */
+.caldra-card {
+  background-color: color-mix(in oklab, #FFFFFF calc(var(--card-opacity, 0.90) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  box-shadow: 0 4px 18px -2px oklch(0 0 0 / 6%), 0 2px 6px -1px oklch(0 0 0 / 3%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--foreground);
+}
+
+.dark .caldra-card {
+  background-color: color-mix(in oklab, #16181D calc(var(--card-opacity, 0.90) * 100%), transparent);
+  border: 1px solid oklch(1 0 0 / 8%);
+  box-shadow: 0 12px 32px -10px oklch(0 0 0 / 60%), 0 1px 3px oklch(0 0 0 / 25%);
+  color: var(--foreground);
+}
+
+.amoled .caldra-card {
+  background-color: color-mix(in oklab, #000000 calc(var(--card-opacity, 0.90) * 100%), transparent);
+  border: 1px solid oklch(1 0 0 / 12%);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 4%);
+}
+
+/* Área de apresentação Hero */
+.caldra-hero {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, #FFFFFF calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #F1F5F9 calc(var(--card-opacity, 0.90) * 100%), transparent)
+  );
+  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  box-shadow: 0 10px 30px -4px oklch(0 0 0 / 7%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .caldra-hero {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, #181A20 calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #141519 calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #0E0F12 calc(var(--card-opacity, 0.90) * 100%), transparent)
+  );
+  border: 1px solid oklch(1 0 0 / 8%);
+  box-shadow: 0 16px 40px -10px oklch(0 0 0 / 70%);
+}
+
+.amoled .caldra-hero {
+  background: color-mix(in oklab, #060709 calc(var(--card-opacity, 0.90) * 100%), transparent);
+  border: 1px solid oklch(1 0 0 / 12%);
+}
+
+/* Faixa Especialização */
+.caldra-specialization {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, #FFFBEB calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #FEF3C7 calc(var(--card-opacity, 0.90) * 100%), transparent)
+  );
+  border: 1px solid color-mix(in oklab, #F59E0B 40%, transparent);
+  box-shadow: 0 6px 20px -2px oklch(0.7 0.15 70 / 12%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .caldra-specialization {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, #181A20 calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #1C1E26 calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #25201A calc(var(--card-opacity, 0.90) * 100%), transparent)
+  );
+  border: 1px solid oklch(0.77 0.163 70 / 25%);
+  box-shadow: 0 12px 30px -8px oklch(0 0 0 / 50%);
+}
+
+.amoled .caldra-specialization {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, #000000 calc(var(--card-opacity, 0.90) * 100%), transparent),
+    color-mix(in oklab, #17120A calc(var(--card-opacity, 0.90) * 100%), transparent)
+  );
+  border: 1px solid oklch(0.77 0.163 70 / 35%);
+}
+
+/* Barra inferior de navegação sólida (BubbleNav) */
+.caldra-dock {
+  background-color: #FFFFFF;
+  border-top: 1px solid oklch(0 0 0 / 10%);
+}
+
+.dark .caldra-dock {
+  background-color: #0B0E14;
+  border-top: 1px solid oklch(1 0 0 / 10%);
+}
+
+.amoled .caldra-dock {
+  background-color: #000000;
+  border-top: 1px solid oklch(1 0 0 / 12%);
+}
+
+/* Bolhas de ícones e acentos controladas por --bubble-opacity */
+.caldra-bubble-base {
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Bolha Vermelha CALDRA */
+.caldra-bubble-red {
+  background-color: color-mix(in oklab, #FEE2E2 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, #EF4444 38%, transparent);
+  color: #DC2626;
+}
+.dark .caldra-bubble-red {
+  background-color: color-mix(in oklab, #450A0A calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(0.64 0.19 25 / 32%);
+  color: #EF4444;
+}
+
+/* Bolha Azul CAD */
+.caldra-bubble-sky {
+  background-color: color-mix(in oklab, #E0F2FE calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, #0284C7 38%, transparent);
+  color: #0284C7;
+}
+.dark .caldra-bubble-sky {
+  background-color: color-mix(in oklab, #082F49 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(0.7 0.14 230 / 32%);
+  color: #38BDF8;
+}
+
+/* Bolha Âmbar Técnica */
+.caldra-bubble-amber {
+  background-color: color-mix(in oklab, #FEF3C7 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, #D97706 40%, transparent);
+  color: #D97706;
+}
+.dark .caldra-bubble-amber {
+  background-color: color-mix(in oklab, #451A03 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(0.77 0.163 70 / 32%);
+  color: #FBBF24;
+}
+
+/* Bolha Verde Orçamentos */
+.caldra-bubble-emerald {
+  background-color: color-mix(in oklab, #D1FAE5 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, #059669 40%, transparent);
+  color: #059669;
+}
+.dark .caldra-bubble-emerald {
+  background-color: color-mix(in oklab, #022C22 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(0.7 0.15 150 / 32%);
+  color: #34D399;
+}
+
+/* Bolha Índigo / Roxa Especialização */
+.caldra-bubble-indigo {
+  background-color: color-mix(in oklab, #EEF2FF calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, #6366F1 40%, transparent);
+  color: #4F46E5;
+}
+.dark .caldra-bubble-indigo {
+  background-color: color-mix(in oklab, #1E1B4B calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(0.65 0.16 270 / 32%);
+  color: #A5B4FC;
+}
+
+/* Bolha Neutra (Botões de cabeçalho, atalhos, etc.) */
+.caldra-bubble-neutral {
+  background-color: color-mix(in oklab, var(--card) calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+  color: var(--foreground);
+}
+.dark .caldra-bubble-neutral {
+  background-color: color-mix(in oklab, #1E2028 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(1 0 0 / 10%);
+  color: oklch(0.85 0.005 80);
+}
+.amoled .caldra-bubble-neutral {
+  background-color: color-mix(in oklab, #111114 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  border: 1px solid oklch(1 0 0 / 14%);
+}
+
+/* Bolha Central do Logotipo CALDRA (Botão Home na barra inferior) */
+.caldra-bubble-center {
+  background-color: color-mix(in oklab, #FFFFFF calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dark .caldra-bubble-center {
+  background-color: color-mix(in oklab, #16181D calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+}
+.amoled .caldra-bubble-center {
+  background-color: color-mix(in oklab, #000000 calc(var(--bubble-opacity, 0.35) * 100%), transparent);
+}
+

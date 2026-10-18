@@ -1,0 +1,1461 @@
+PROMPT DEFINITIVO — CHAMFER 3D CAD CORE
+REPRODUÇÃO DA INTERFACE DA IMAGEM DE REFERÊNCIA & AJUSTE DE PROPORÇÃO E IDENTIDADE GEOMÉTRICA
+
+Você é o engenheiro principal de UI/UX, CAD e geometria 3D da CALDRA.
+
+Estou fornecendo DUAS imagens de referência.
+
+IMAGEM 1:
+É a referência visual desejada para proporções, escala de fontes, tamanho dos ícones, espaçamento e densidade da interface.
+
+IMAGEM 2:
+É a implementação atual da interface dentro do CALDRA.
+
+IMPORTANTE:
+
+A IMAGEM 2 já possui a arquitetura visual correta em grande parte.
+
+NÃO reconstruir a interface do zero.
+
+NÃO remover as funcionalidades existentes.
+
+NÃO alterar desnecessariamente a disposição geral.
+
+A tarefa é corrigir a implementação atual para aproximá-la da proporção e organização da IMAGEM 1, além de corrigir o carregamento da geometria 3D.
+
+============================================================
+1. REGRA PRINCIPAL DE COMPARAÇÃO
+============================================================
+
+Trate:
+
+IMAGEM 1 = DESIGN TARGET
+
+IMAGEM 2 = CURRENT IMPLEMENTATION
+
+A IMAGEM 1 deve ser usada como referência de:
+
+- escala;
+- densidade;
+- tamanho de fontes;
+- tamanho de ícones;
+- altura dos botões;
+- espaçamento;
+- proporção dos painéis;
+- ocupação do viewport;
+- hierarquia visual.
+
+A IMAGEM 2 deve ser preservada estruturalmente, corrigindo somente aquilo que está desproporcional ou funcionalmente incorreto.
+
+============================================================
+2. PROBLEMA ATUAL Nº 1 — INTERFACE GRANDE DEMAIS
+============================================================
+
+A interface atual da IMAGEM 2 está visualmente maior e mais pesada que a IMAGEM 1.
+
+Os textos estão maiores.
+
+Os ícones estão maiores.
+
+Os botões estão mais altos.
+
+Os painéis estão ocupando espaço excessivo.
+
+Isso reduz a área útil do viewport e dificulta a visualização da peça.
+
+REDUZIR A ESCALA DA UI.
+
+Não simplesmente aplicar:
+
+transform: scale(...)
+
+na interface inteira.
+
+A redução deve ser feita de maneira estrutural:
+
+- font-size;
+- line-height;
+- padding;
+- gap;
+- icon-size;
+- button-height;
+- panel spacing;
+- border radius;
+- toolbar height.
+
+============================================================
+3. ESCALA DIMENSIONAL DA REFERÊNCIA
+============================================================
+
+A referência possui resolução:
+
+1536 × 695 px.
+
+Usar essa resolução como referência de proporção.
+
+A interface deve ser projetada para manter proporções equivalentes em diferentes resoluções através de unidades responsivas, mas utilizar os valores abaixo como BASE para a resolução de referência.
+
+------------------------------------------------------------
+HEADER
+------------------------------------------------------------
+
+Altura aproximada:
+
+64–72 px.
+
+Não ultrapassar aproximadamente:
+
+72 px.
+
+------------------------------------------------------------
+FONTE DO HEADER
+------------------------------------------------------------
+
+Textos principais:
+
+14–16 px.
+
+Nome/identificação de seção:
+
+16–18 px.
+
+Nunca utilizar fonte de 20–24 px para os textos normais dos botões do header.
+
+Peso:
+
+500–600.
+
+Evitar fontes excessivamente pesadas.
+
+------------------------------------------------------------
+ÍCONES DO HEADER
+------------------------------------------------------------
+
+Tamanho:
+
+18–20 px.
+
+Não utilizar ícones de 24–30 px nos controles normais.
+
+Os ícones devem ter aproximadamente:
+
+1.2× a 1.35×
+
+a altura visual do texto ao qual pertencem.
+
+------------------------------------------------------------
+BOTÕES DO HEADER
+------------------------------------------------------------
+
+Altura:
+
+40–46 px.
+
+Padding horizontal:
+
+14–18 px.
+
+Border radius:
+
+18–23 px.
+
+Não criar botões gigantes.
+
+============================================================
+4. BARRA DE VISTAS
+============================================================
+
+A barra que atualmente fica abaixo do header deve ser compacta.
+
+Ela contém:
+
+ISO
+FR
+LAT
+SUP
+
+e:
+
+SOMB
+SOMB+AR
+ARAME
+
+A altura total da barra deve ficar aproximadamente entre:
+
+48–56 px.
+
+Cada opção deve possuir:
+
+font-size:
+13–15 px
+
+ícone:
+16–18 px
+
+padding horizontal:
+10–14 px
+
+altura:
+38–44 px
+
+gap:
+4–8 px
+
+A opção ativa deve ter apenas um destaque sutil.
+
+Não aumentar o tamanho do botão selecionado.
+
+============================================================
+5. MUDANÇA IMPORTANTE NO HEADER
+============================================================
+
+Atualmente existe o nome da peça no centro superior:
+
+CONE
+
+ou:
+
+QUADRADO → REDONDO
+
+REMOVER O NOME DA PEÇA DO CENTRO DO HEADER.
+
+O nome da peça NÃO deve mais ocupar essa região.
+
+Utilizar esse espaço para acomodar as vistas principais:
+
+ISO
+FR
+LAT
+SUP
+
+A organização deve ser aproximadamente:
+
+[ 2D PROJETO ] [ 2D SKETCH ] [ 3D SÓLIDO ]
+
+              [ ISO | FR | LAT | SUP ]
+
+                                              [ WIRE3D ]
+                                              [ CAD CORE 3D ]
+                                              [ CAD KERNEL ]
+
+O centro da interface deve ser utilizado para controles de visualização, e não para o nome do modelo.
+
+O nome do modelo poderá aparecer no painel contextual ou em outro local secundário, quando necessário.
+
+============================================================
+6. PRIORIDADE DO VIEWPORT
+============================================================
+
+A área 3D deve ganhar o máximo de espaço possível.
+
+A peça é o elemento principal da tela.
+
+A UI deve funcionar como uma camada de ferramentas ao redor do viewport.
+
+NÃO deixar os painéis cobrirem excessivamente a peça.
+
+A redução da fonte e dos ícones deve justamente liberar espaço para o modelo.
+
+============================================================
+7. BARRA LATERAL ESQUERDA
+============================================================
+
+Manter:
+
+CRIAR
+MODIFICAR
+DETALHES
+CHAPA
+ESTRUTURAS
+MEDIR
+EXPORTAR
+
+Porém reduzir sua densidade.
+
+Altura aproximada de cada item:
+
+48–54 px.
+
+Fonte:
+
+13–15 px.
+
+Ícone:
+
+18–20 px.
+
+Seta:
+
+14–16 px.
+
+Padding horizontal:
+
+14–18 px.
+
+Gap vertical:
+
+6–8 px.
+
+Não usar fonte grande.
+
+O painel deve ocupar aproximadamente:
+
+220–250 px
+
+de largura na resolução de referência de 1536 px.
+
+Evitar ultrapassar essa largura sem necessidade.
+
+============================================================
+8. PAINEL DIREITO
+============================================================
+
+Manter:
+
+PARÂMETROS
+INSPEÇÃO
+FILTRO
+
+O painel direito deve ser contextual.
+
+Ele não deve ocupar permanentemente uma grande parte da tela.
+
+Largura aproximada:
+
+380–430 px
+
+na resolução de referência de 1536 × 695.
+
+Em telas menores:
+
+usar comportamento responsivo.
+
+============================================================
+9. FONTE DO PAINEL DIREITO
+============================================================
+
+Título principal:
+
+15–17 px.
+
+Labels:
+
+12–13 px.
+
+Valores:
+
+14–16 px.
+
+Unidades:
+
+11–12 px.
+
+Informações secundárias:
+
+11–13 px.
+
+Não utilizar textos de 18–22 px para campos normais.
+
+============================================================
+10. ÍCONES DO PAINEL
+============================================================
+
+Ícones:
+
+18–20 px.
+
+Ícones de ação primária:
+
+20–22 px no máximo.
+
+Não utilizar ícones gigantes.
+
+A proporção visual desejada é:
+
+Ícone ≈ 1.25× o corpo da fonte.
+
+============================================================
+11. CAMPOS DE PARÂMETROS
+============================================================
+
+Campos:
+
+DIÂMETRO DA BASE
+ALTURA
+ESPESSURA
+
+Devem ser compactos.
+
+Altura aproximada:
+
+40–46 px.
+
+Fonte do valor:
+
+14–16 px.
+
+Unidade:
+
+11–12 px.
+
+Não aumentar o campo apenas para acomodar fonte grande.
+
+============================================================
+12. BARRA INFERIOR
+============================================================
+
+Manter a barra de status sempre visível:
+
+ESPESSURA
+MATERIAL
+DOBRAS
+DIM
+PESO
+RESET
+
+Porém manter uma densidade semelhante à IMAGEM 1.
+
+Fonte:
+
+12–14 px.
+
+Valor:
+
+13–15 px.
+
+Ícones:
+
+18–20 px.
+
+Altura total:
+
+48–56 px.
+
+Não transformar a barra inferior em um painel alto.
+
+============================================================
+13. REGRA DE ESCALA DOS ÍCONES
+============================================================
+
+Utilizar uma escala consistente:
+
+Ícone pequeno:
+14–16 px
+
+Ícone normal:
+18–20 px
+
+Ícone de ação primária:
+20–22 px
+
+Ícone nunca deve ultrapassar aproximadamente:
+
+1.5×
+
+a altura da fonte correspondente.
+
+Evitar ícones de 26–32 px em botões normais.
+
+============================================================
+14. REGRA DE ESCALA DAS FONTES
+============================================================
+
+Usar esta hierarquia:
+
+MICRO / METADADOS
+11–12 px
+
+LABEL
+12–13 px
+
+BOTÃO
+13–15 px
+
+VALOR
+14–16 px
+
+TÍTULO DE PAINEL
+15–17 px
+
+TÍTULO PRINCIPAL
+16–18 px
+
+Não utilizar uma única fonte grande para todos os elementos.
+
+============================================================
+15. PROBLEMA FUNCIONAL Nº 2 — MODELO 3D ERRADO
+============================================================
+
+Existe um problema crítico.
+
+Quando uma peça já foi criada na área de TRAÇAGEM e o usuário entra na visualização:
+
+3D SÓLIDO
+
+o sistema está exibindo:
+
+CONE
+
+independentemente da peça que foi realmente criada.
+
+Isso está ERRADO.
+
+O sistema NÃO pode utilizar Cone como modelo padrão/fallback visual.
+
+============================================================
+16. REGRA DE IDENTIDADE DO MODELO
+============================================================
+
+Quando o usuário cria ou importa uma peça na área de Traçagem, deve existir uma identificação persistente do modelo.
+
+Exemplo conceitual:
+
+projectId
+modelId
+modelType
+geometryType
+parameters
+units
+dimensions
+material
+thickness
+source
+
+O ambiente 3D deve recuperar exatamente esse modelo.
+
+Fluxo obrigatório:
+
+TRAÇAGEM
+↓
+MODELO CANÔNICO
+↓
+MODEL ID / TYPE
+↓
+PARÂMETROS
+↓
+GEOMETRIA
+↓
+CAD CORE
+↓
+B-REP
+↓
+3D VIEWPORT
+
+Não:
+
+TRAÇAGEM
+↓
+3D
+↓
+CONE DEFAULT
+
+============================================================
+17. IDENTIFICAÇÃO DO TIPO DE PEÇA
+============================================================
+
+O sistema deve verificar o tipo real da peça.
+
+Exemplos:
+
+CONE
+TRONCO_CONE
+CURVA_GOMOS
+BOCA_DE_LOBO
+TE
+Y
+QUADRADO_REDONDO
+RETANGULAR_REDONDO
+REDUCAO
+CHAPEU_CHINES
+FLANGE_CIRCULAR
+PERFIL
+CHAPA
+OUTRO
+
+Se a peça for:
+
+QUADRADO → REDONDO
+
+a visualização 3D deve mostrar:
+
+QUADRADO → REDONDO.
+
+Se for:
+
+FLANGE CIRCULAR
+
+deve mostrar:
+
+FLANGE CIRCULAR.
+
+Se for:
+
+BOCA DE LOBO
+
+deve mostrar:
+
+BOCA DE LOBO.
+
+Nunca substituir automaticamente por CONE.
+
+============================================================
+18. CONVERSÃO DAS MEDIDAS
+============================================================
+
+Ao enviar o modelo da Traçagem para o CAD CORE:
+
+o sistema deve verificar as medidas reais.
+
+Exemplo:
+
+Traçagem:
+
+largura = 200 mm
+altura = 100 mm
+espessura = 3 mm
+
+O CAD CORE deve interpretar:
+
+200 mm
+100 mm
+3 mm
+
+e construir o B-Rep correspondente.
+
+Não assumir valores fixos.
+
+Não utilizar dimensões do exemplo da interface.
+
+Não utilizar:
+
+100 × 100 × 3
+
+como padrão universal.
+
+============================================================
+19. UNIDADES
+============================================================
+
+Definir explicitamente a unidade do modelo.
+
+Preferência:
+
+mm
+
+Se a origem estiver em outra unidade:
+
+converter explicitamente.
+
+Exemplos:
+
+cm → mm
+m → mm
+in → mm
+
+Nunca misturar unidades silenciosamente.
+
+Registrar:
+
+sourceUnit
+cadUnit
+
+e realizar uma conversão explícita.
+
+============================================================
+20. VERIFICAÇÃO GEOMÉTRICA
+============================================================
+
+Antes de enviar o modelo para o CAD CORE:
+
+validar:
+
+- tipo;
+- parâmetros;
+- unidades;
+- dimensões;
+- espessura;
+- posição;
+- orientação;
+- geometria;
+- bounding box.
+
+Se houver incompatibilidade:
+
+mostrar erro técnico apropriado.
+
+NÃO substituir silenciosamente por Cone.
+
+============================================================
+21. CONVERSÃO PARA B-REP
+============================================================
+
+A conversão deve ser:
+
+MODELO CALDRA
+↓
+GEOMETRIA CANÔNICA
+↓
+CAD CORE
+↓
+OCCT
+↓
+B-REP
+↓
+TESSELLATION
+↓
+THREE.JS
+
+O modelo 3D deve ser derivado dos dados reais da peça.
+
+Não criar uma segunda peça independente apenas para o viewport.
+
+============================================================
+22. FALLBACK
+============================================================
+
+É proibido utilizar:
+
+CONE
+
+como fallback genérico.
+
+Se o modelo não puder ser convertido:
+
+mostrar uma mensagem técnica como:
+
+"Não foi possível converter este modelo para CAD 3D."
+
+ou estado equivalente.
+
+O sistema pode oferecer:
+
+"Ver diagnóstico"
+
+mas não inventar uma geometria diferente.
+
+============================================================
+23. GRID DO VIEWPORT
+============================================================
+
+Adicionar um GRID no chão do ambiente 3D.
+
+O grid deve estar abaixo da peça.
+
+Deve funcionar como referência espacial.
+
+O grid não deve atravessar visualmente a peça de maneira excessiva.
+
+============================================================
+24. GRID — TEMA ESCURO
+============================================================
+
+Quando o tema selecionado nas configurações for:
+
+ESCURO
+
+usar exatamente:
+
+FUNDO DO VIEWPORT:
+
+#051833
+
+O fundo do viewport deve ser:
+
+#051833
+
+Não usar preto puro.
+
+Não usar o mesmo material/cor da peça como fundo.
+
+O objetivo é criar contraste entre:
+
+peça
+grid
+fundo.
+
+GRID:
+
+branco.
+
+Utilizar branco com transparência apropriada para não ficar agressivo.
+
+Por exemplo:
+
+linha principal:
+rgba(255,255,255,0.18)
+
+linha secundária:
+rgba(255,255,255,0.08)
+
+Ajustar conforme o sistema visual existente, mas manter a cor-base branca.
+
+============================================================
+25. GRID — TEMA CLARO
+============================================================
+
+Quando o tema selecionado for:
+
+CLARO
+
+usar o fundo claro já definido pelo sistema de temas.
+
+NÃO inventar outra cor de fundo.
+
+O grid deve ser:
+
+PRETO / CINZA MUITO ESCURO
+
+com transparência.
+
+Exemplo conceitual:
+
+linha principal:
+rgba(0,0,0,0.16)
+
+linha secundária:
+rgba(0,0,0,0.07)
+
+A cor deve permanecer escura o suficiente para identificar a geometria.
+
+============================================================
+26. GRID NÃO DEVE DEPENDER DA COR DA PEÇA
+============================================================
+
+O grid deve ser definido pelo:
+
+TEMA DA INTERFACE.
+
+Nunca pela cor/material da peça.
+
+Exemplo:
+
+peça branca em tema escuro:
+grid branco.
+
+peça preta em tema escuro:
+grid branco.
+
+peça vermelha em tema claro:
+grid preto.
+
+peça cinza em tema claro:
+grid preto.
+
+O grid deve permanecer legível independentemente do material.
+
+============================================================
+27. FUNDO NÃO DEVE COPIAR A COR DA PEÇA
+============================================================
+
+NÃO utilizar:
+
+cor da peça
+→ cor do fundo.
+
+O fundo é uma propriedade do viewport.
+
+A peça é uma propriedade do modelo/material.
+
+Separar:
+
+VIEWPORT BACKGROUND
+GRID
+MODEL MATERIAL
+EDGE COLOR
+
+Essas quatro coisas devem ser independentes.
+
+============================================================
+28. GRID 3D
+============================================================
+
+O grid deve respeitar o sistema de coordenadas 3D.
+
+Mostrar principalmente no plano horizontal:
+
+XY
+
+ou no plano de chão definido pelo sistema.
+
+Ele deve permanecer fixo espacialmente enquanto a câmera orbita.
+
+Não usar uma imagem 2D falsa como grid.
+
+O grid deve existir no espaço 3D.
+
+============================================================
+29. ESCALA DO GRID
+============================================================
+
+A escala do grid deve ser coerente com a unidade do projeto.
+
+Se o projeto estiver em mm:
+
+utilizar espaçamento apropriado em mm.
+
+Exemplo:
+
+10 mm
+50 mm
+100 mm
+
+dependendo da escala da peça.
+
+Não deixar uma grade de 1 mm para uma peça de vários metros.
+
+Implementar espaçamento adaptativo.
+
+============================================================
+30. GRID ADAPTATIVO
+============================================================
+
+O grid deve mudar sua densidade conforme o zoom.
+
+ZOOM PRÓXIMO:
+
+linhas menores.
+
+ZOOM DISTANTE:
+
+linhas maiores.
+
+Manter sempre uma referência visual útil.
+
+Não permitir que o grid fique excessivamente denso.
+
+============================================================
+31. EIXOS
+============================================================
+
+Manter os eixos:
+
+X
+Y
+Z
+
+em uma área discreta do viewport.
+
+O eixo deve possuir contraste adequado ao tema.
+
+Não permitir que o eixo ocupe visualmente mais espaço que a peça.
+
+============================================================
+32. VISTAS NO ESPAÇO SUPERIOR
+============================================================
+
+A remoção do nome:
+
+CONE
+QUADRADO → REDONDO
+etc.
+
+abre espaço para as vistas.
+
+Usar:
+
+ISO
+FR
+LAT
+SUP
+
+como controle permanente.
+
+Esses controles devem ficar em uma barra compacta centralizada.
+
+Não duplicar essas opções em vários lugares da tela.
+
+============================================================
+33. MODO DE VISUALIZAÇÃO
+============================================================
+
+Manter:
+
+SOMB
+SOMB+AR
+ARAME
+
+na mesma barra ou grupo de visualização.
+
+Separar visualmente:
+
+VISTAS:
+
+ISO
+FR
+LAT
+SUP
+
+de:
+
+REPRESENTAÇÃO:
+
+SOMB
+SOMB+AR
+ARAME
+
+Utilizar uma pequena divisória vertical entre os dois grupos.
+
+============================================================
+34. POSICIONAMENTO DA BARRA DE VISTAS
+============================================================
+
+A barra deve ocupar aproximadamente o centro superior do viewport.
+
+Ela não deve ficar sobre a peça.
+
+Posição aproximada:
+
+top: 80–95 px
+
+dependendo da altura do header.
+
+horizontalmente:
+
+centralizada.
+
+Ela deve possuir:
+
+fundo branco no tema claro
+ou superfície apropriada ao tema escuro.
+
+Sombra suave.
+
+Border radius:
+
+18–24 px.
+
+============================================================
+35. CAD KERNEL
+============================================================
+
+Manter:
+
+CAD KERNEL
+
+no canto superior direito.
+
+Seu tamanho deve seguir a escala da IMAGEM 1.
+
+Não aumentar o botão.
+
+Mostrar estado real:
+
+● Ativo
+
+ou:
+
+● Inicializando
+
+ou:
+
+● Erro
+
+A indicação deve vir do estado real do kernel.
+
+============================================================
+36. WIRE3D / CAD CORE 3D
+============================================================
+
+Manter os controles:
+
+WIRE3D
+CAD CORE 3D
+
+no header.
+
+CAD CORE 3D deve representar o ambiente CAD atual.
+
+Wire3D deve permanecer disponível como fallback durante a migração.
+
+============================================================
+37. PEÇA SEMPRE CENTRALIZADA
+============================================================
+
+Depois de converter a peça:
+
+calcular:
+
+BoundingBox
+BoundingSphere
+Center
+
+e executar:
+
+FIT TO MODEL.
+
+A câmera deve enquadrar o modelo.
+
+Isso deve funcionar para qualquer peça.
+
+Não utilizar uma posição fixa baseada no Cone.
+
+============================================================
+38. CÂMERA
+============================================================
+
+A câmera deve ser configurada com base no tamanho real do modelo.
+
+Não usar:
+
+camera.position = valor fixo
+
+como solução universal.
+
+Para cada modelo:
+
+bounding box
+↓
+center
+↓
+bounding sphere
+↓
+camera distance
+↓
+lookAt(center)
+
+============================================================
+39. RESET
+============================================================
+
+RESET deve:
+
+- restaurar câmera;
+- restaurar zoom;
+- restaurar pan;
+- restaurar orientação;
+- recalcular FIT;
+- manter o modelo correto.
+
+Não substituir o modelo por Cone.
+
+============================================================
+40. MODELO DA ÁREA DE TRAÇAGEM
+============================================================
+
+O fluxo deve ser:
+
+Usuário cria uma peça na Traçagem.
+
+Exemplo:
+
+QUADRADO → REDONDO
+
+Ele define:
+
+A
+B
+D
+H
+espessura
+material
+
+Ao abrir:
+
+3D SÓLIDO
+
+o sistema deve recuperar exatamente:
+
+QUADRADO → REDONDO
+
+com os mesmos parâmetros.
+
+O 3D deve ser uma representação da peça criada.
+
+Não uma demonstração genérica.
+
+============================================================
+41. PERSISTÊNCIA
+============================================================
+
+O modelo selecionado deve permanecer associado ao projeto.
+
+Exemplo:
+
+project.parts[]
+
+Cada peça deve possuir identificação.
+
+O 3D deve solicitar:
+
+partId
+
+e carregar aquela peça.
+
+Não assumir:
+
+parts[0]
+
+como peça padrão.
+
+Não assumir:
+
+type = cone
+
+como fallback.
+
+============================================================
+42. VALIDAÇÃO DO TIPO
+============================================================
+
+Antes de construir o 3D:
+
+if modelType === "CONE"
+
+→ construir Cone.
+
+if modelType === "QUADRADO_REDONDO"
+
+→ construir Quadrado → Redondo.
+
+if modelType === "FLANGE_CIRCULAR"
+
+→ construir Flange Circular.
+
+etc.
+
+Não criar um único renderer genérico que converte tudo para Cone.
+
+============================================================
+43. RESPONSIVIDADE
+============================================================
+
+As medidas indicadas neste prompt são BASE DE DESIGN para:
+
+1536 × 695 px.
+
+Não fixar cegamente esses valores em todas as telas.
+
+Criar tokens responsivos.
+
+Por exemplo:
+
+--ui-font-xs
+--ui-font-sm
+--ui-font-md
+--ui-font-lg
+
+--icon-sm
+--icon-md
+--icon-lg
+
+--toolbar-height
+--panel-width
+--button-height
+
+A proporção visual deve permanecer equivalente.
+
+============================================================
+44. DENSIDADE VISUAL
+============================================================
+
+O objetivo é chegar à densidade visual da IMAGEM 1.
+
+A IMAGEM 2 atualmente está:
+
+- grande demais;
+- com fontes grandes;
+- com ícones grandes;
+- com painéis muito dominantes;
+- com menos espaço aparente para a peça.
+
+Reduzir a densidade aproximadamente para o nível da IMAGEM 1.
+
+Não diminuir apenas a fonte.
+
+Diminuir proporcionalmente:
+
+fonte
++
+ícones
++
+padding
++
+altura
++
+gap.
+
+============================================================
+45. NÃO USAR TRANSFORM SCALE NA UI INTEIRA
+============================================================
+
+NÃO fazer:
+
+transform: scale(0.8)
+
+na aplicação inteira.
+
+Isso pode causar:
+
+- problemas de acessibilidade;
+- problemas de clique;
+- blurry rendering;
+- problemas de posicionamento;
+- inconsistências de layout.
+
+A escala deve ser implementada nos tokens/componentes reais.
+
+============================================================
+46. CRITÉRIOS DE ACEITAÇÃO
+============================================================
+
+A alteração só estará concluída quando:
+
+UI:
+
+[✓] fonte visualmente equivalente à IMAGEM 1
+[✓] ícones visualmente equivalentes à IMAGEM 1
+[✓] botões compactos
+[✓] painéis compactos
+[✓] maior viewport
+[✓] vistas ISO/FR/LAT/SUP ocupando o espaço central superior
+[✓] nome da peça removido do centro do header
+
+MODELO:
+
+[✓] peça correta carregada
+[✓] Cone não é mais fallback universal
+[✓] modelType é respeitado
+[✓] parâmetros são respeitados
+[✓] unidades são convertidas corretamente
+[✓] dimensões reais são verificadas
+[✓] B-Rep corresponde à peça original
+[✓] FIT TO MODEL funciona
+
+GRID:
+
+[✓] grid 3D presente no chão
+[✓] tema escuro usa fundo #051833
+[✓] tema escuro usa grid branco
+[✓] tema claro usa grid escuro
+[✓] grid não depende da cor da peça
+[✓] grid possui escala adaptativa
+[✓] grid não cobre visualmente a peça
+
+============================================================
+47. TESTES OBRIGATÓRIOS
+============================================================
+
+Testar no mínimo:
+
+1. Cone
+2. Quadrado → Redondo
+3. Flange Circular
+4. Boca de Lobo
+5. Redução
+6. Curva
+7. Tê
+8. Y
+9. modelo genérico criado no Sketch
+
+Para cada modelo:
+
+Traçagem
+↓
+3D SÓLIDO
+↓
+identificação do tipo
+↓
+conversão de unidade
+↓
+construção B-Rep
+↓
+tessellation
+↓
+fit
+↓
+renderização
+
+Confirmar que o modelo visualizado corresponde ao modelo de origem.
+
+============================================================
+48. TESTE DE TEMAS
+============================================================
+
+Testar:
+
+TEMA CLARO
+
+Fundo:
+tema claro existente.
+
+Grid:
+preto/cinza escuro.
+
+TEMA ESCURO
+
+Fundo:
+#051833
+
+Grid:
+branco.
+
+Confirmar que a peça continua legível nos dois casos.
+
+============================================================
+49. RESULTADO FINAL ESPERADO
+============================================================
+
+A interface final deve preservar a estrutura atual da IMAGEM 2, porém visualmente aproximada da densidade e proporção da IMAGEM 1.
+
+O resultado deve transmitir:
+
+CAD profissional
++
+viewport amplo
++
+ferramentas compactas
++
+informações contextuais
++
+modelo correto
++
+grid técnico
++
+tema coerente.
+
+A peça deve ser sempre o elemento visual dominante.
+
+A UI deve apoiar a modelagem, não competir com ela.
+
+============================================================
+50. REGRA FINAL
+============================================================
+
+NÃO criar uma nova interface do zero.
+
+NÃO remover ferramentas.
+
+NÃO criar um Cone genérico.
+
+NÃO usar dimensões fixas como fallback.
+
+NÃO usar cor da peça como cor do fundo.
+
+NÃO usar o nome da peça no centro do header.
+
+NÃO deixar a fonte e os ícones grandes como estão na IMAGEM 2.
+
+NÃO aplicar scale global na interface.
+
+NÃO usar grid 2D falso no viewport 3D.
+
+NÃO criar valores fictícios.
+
+Primeiro analisar a implementação atual.
+
+Depois corrigir:
+
+1. escala da UI;
+2. posicionamento das vistas;
+3. identificação do modelo;
+4. conversão de unidades;
+5. construção B-Rep;
+6. câmera;
+7. grid;
+8. temas;
+9. responsividade.
+
+A IMAGEM 1 é a referência visual.
+A IMAGEM 2 é o sistema que deve ser corrigido.
+
+O resultado deve preservar a funcionalidade real da CALDRA e aproximar visualmente a interface da referência.
