@@ -123,9 +123,6 @@ function DiagnosticoPage() {
           <ChevronLeft className="size-3" /> Estudos
         </Link>
         <h1 className="mt-2 font-display text-xl font-semibold lg:text-2xl">Descubra seu nível</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Seis perguntas rápidas. O resultado define por onde começar.
-        </p>
       </div>
 
       {done ? (

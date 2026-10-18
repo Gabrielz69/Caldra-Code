@@ -49,9 +49,6 @@ function Planificacao() {
     <div className="space-y-4">
       <header>
         <h1 className="font-display text-2xl font-semibold">Planificação</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Distribua as peças desenvolvidas na chapa comercial e antecipe consumo, sobra e peso.
-        </p>
       </header>
 
       <div className="flex gap-1.5">

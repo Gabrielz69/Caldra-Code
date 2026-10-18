@@ -82,10 +82,6 @@ function ContaPage() {
           <span>Voltar para Perfil e Conta</span>
         </Link>
         <h1 className="font-display text-2xl font-bold text-foreground">Gerenciamento de Conta</h1>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          A conta é opcional — o CALDRA funciona 100% offline. O login serve para sincronizar seu plano
-          e projetos entre dispositivos.
-        </p>
       </header>
 
       {user ? (

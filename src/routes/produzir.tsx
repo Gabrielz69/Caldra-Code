@@ -485,7 +485,6 @@ function ProduzirPage() {
             </span>
           }
           title="Produzir"
-          description="Acompanhamento e execução de fabricação, fichas de bancada, corte CNC e custos de oficina."
           actions={
             <button
               type="button"
@@ -511,10 +510,10 @@ function ProduzirPage() {
             ========================================================================= */}
         <section
           aria-label="Trabalho prioritário em execução"
-          className="caldra-hero relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-gradient-to-b from-[#13161F] to-[#0A0D12] shadow-2xl p-3 sm:p-3.5 space-y-2.5"
+          className="caldra-hero relative overflow-hidden rounded-2xl border dark:border-zinc-800/90 border-border/80 dark:bg-gradient-to-b dark:from-[#13161F] dark:to-[#0A0D12] shadow-2xl p-3 sm:p-3.5 space-y-2.5"
         >
           {/* Linha superior: Marcador de etapa (32 px) + Título + Status */}
-          <div className="flex items-center justify-between gap-2 border-b border-zinc-800/60 pb-2">
+          <div className="flex items-center justify-between gap-2 border-b dark:border-zinc-800/60 border-border/60 pb-2">
             <div className="flex items-center gap-2 min-w-0">
               <div className="caldra-bubble-base caldra-bubble-emerald size-8 shrink-0">
                 <Flame className="size-4 stroke-[2]" />

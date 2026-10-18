@@ -46,7 +46,6 @@ function CatalogProjectPage() {
       <header>
         <p className="t-eyebrow">Golden Project · {model.category}</p>
         <h1 className="font-display text-3xl font-semibold">{model.name}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{model.description}</p>
       </header>
       <ProjectConfigurator model={model} />
     </div>

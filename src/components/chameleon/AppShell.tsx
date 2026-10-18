@@ -18,7 +18,6 @@ import { AudioQuickControl } from "@/components/audio/AudioQuickControl";
 import { CaldraGenesisPreIntro } from "@/components/caldra/CaldraGenesisPreIntro";
 
 const AURORA_ROUTES = [
-  "/",
   "/perfil",
   "/tracagem",
   "/escola",
@@ -31,7 +30,7 @@ const AURORA_ROUTES = [
 ];
 
 function auroraVisible(pathname: string) {
-  return AURORA_ROUTES.some((r) => (r === "/" ? pathname === "/" : pathname.startsWith(r)));
+  return AURORA_ROUTES.some((r) => pathname.startsWith(r));
 }
 
 /** Editor CHAMFER aberto: tela cheia imersiva, sem navegação global. */

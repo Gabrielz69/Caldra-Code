@@ -335,7 +335,6 @@ function AprendaPage() {
             </span>
           }
           title="Aprenda & Domine"
-          description="Trilhas de formação em caldeiraria industrial, relações matemáticas fundamentadas, tabelas normativas e acervo técnico de oficina."
           actions={
             <div className="flex items-center gap-3 bg-card/60 border border-border/70 rounded-xl px-3.5 py-2 shrink-0">
               <div className="relative size-10 flex items-center justify-center">

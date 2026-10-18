@@ -514,7 +514,7 @@ export function CaldraGenesisPreIntro({
 }: CaldraGenesisPreIntroProps) {
   // Consulta configurações visuais salvas
   let currentTheme: ThemeMode = "light";
-  let currentAccent: AccentColor = "crimson";
+  let currentAccent: AccentColor = "blue";
   try {
     const settings = useSettings();
     currentTheme = settings.theme;

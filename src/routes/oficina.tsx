@@ -282,7 +282,6 @@ function Oficina() {
           </span>
         }
         title="Bancada de Oficina"
-        description="Da chapa ao orçamento: plano de corte, aproveitamento de nesting, custos de fabricação e ordens de serviço."
       />
 
       <nav className="flex flex-wrap gap-1.5">

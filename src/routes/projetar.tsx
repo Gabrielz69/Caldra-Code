@@ -356,7 +356,6 @@ function ProjetarPage() {
             </span>
           }
           title="Projetar"
-          description="Modelagem 3D, traçagens de caldeiraria, prancheta vetorial e calculadora científica."
           actions={
             <div className="flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground bg-card/60 border border-border/70 rounded-lg px-2.5 py-1">
               <Box className="size-3 text-sky-500" />
@@ -372,10 +371,10 @@ function ProjetarPage() {
             ========================================================================= */}
         <section
           aria-label="Ambiente CAD em Destaque"
-          className="caldra-hero relative overflow-hidden rounded-2xl border border-zinc-800/90 bg-gradient-to-b from-[#13151B] to-[#0D0E12] shadow-2xl p-3 sm:p-3.5 space-y-2.5"
+          className="caldra-hero relative overflow-hidden rounded-2xl border dark:border-zinc-800/90 border-border/80 dark:bg-gradient-to-b dark:from-[#13151B] dark:to-[#0D0E12] shadow-2xl p-3 sm:p-3.5 space-y-2.5"
         >
           {/* Header do Hero: Seletor de modelo + Norma técnica */}
-          <div className="flex items-center justify-between gap-2 border-b border-zinc-800/60 pb-2">
+          <div className="flex items-center justify-between gap-2 border-b dark:border-zinc-800/60 border-border/60 pb-2">
             <div className="flex items-center gap-2 min-w-0">
               <div className="caldra-bubble-base caldra-bubble-amber size-8 shrink-0">
                 <Compass className="size-4" strokeWidth={2} />

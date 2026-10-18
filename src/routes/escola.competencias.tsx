@@ -44,9 +44,6 @@ function CompetenciasPage() {
           <ChevronLeft className="size-3" /> Estudos
         </Link>
         <h1 className="mt-2 font-display text-xl font-semibold lg:text-2xl">Minhas competências</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          O que você já domina e o que ainda precisa de prática.
-        </p>
       </div>
 
       {COMPETENCY_MAP.map((c) => {

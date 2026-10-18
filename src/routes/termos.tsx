@@ -57,7 +57,6 @@ function Termos() {
     <div className="mx-auto max-w-2xl space-y-4">
       <header>
         <h1 className="font-display text-2xl font-semibold">Termos de Uso</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Última atualização: setembro de 2026.</p>
       </header>
       {BLOCKS.map((block) => (
         <Panel key={block.title} className="space-y-2 p-4">

@@ -166,7 +166,6 @@ function Biblioteca() {
         badgeColor="text-amber-400"
         indicatorColor="bg-amber-400"
         title="Biblioteca Técnica & Catálogo Costa Ferro"
-        description="Perfis comerciais (Metalon quadrado, retangular e redondo NBR 6591, condução DIN, Schedule, vigas e chapas), ferragens de montagem e limites de fabricação."
       />
 
       {/* Seletor das 3 Camadas da Biblioteca Técnica + Tabelas Normativas */}

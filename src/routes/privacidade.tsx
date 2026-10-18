@@ -69,10 +69,6 @@ function Privacidade() {
     <div className="mx-auto max-w-2xl space-y-4">
       <header>
         <h1 className="font-display text-2xl font-semibold">Política de Privacidade</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Última atualização: setembro de 2026. Em resumo: seu trabalho é seu e fica no seu
-          aparelho.
-        </p>
       </header>
 
       {BLOCKS.map((block) => (

@@ -94,7 +94,6 @@ function TracagemIndex() {
           </span>
         }
         title="Traçagem Paramétrica"
-        description="Modelos 3D matemáticos, planificação zero fresta e traçagem passo a passo para fabricação."
       />
 
       <label className="metal flex min-w-0 items-center gap-2 rounded-full px-4 sm:max-w-md">

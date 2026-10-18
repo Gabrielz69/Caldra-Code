@@ -68,9 +68,6 @@ function QaPage() {
     <div className="space-y-4">
       <header>
         <h1 className="font-display text-2xl font-semibold">Modo QA</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Verificação automática dos módulos de cálculo. Rode antes de cada publicação.
-        </p>
       </header>
 
       <Panel className="p-4">

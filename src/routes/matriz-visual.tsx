@@ -75,9 +75,6 @@ function MatrizVisual() {
     <div className="mx-auto max-w-5xl space-y-6">
       <header>
         <h1 className="font-display text-2xl font-semibold">Matriz visual</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Conferência dos componentes do Design System nos temas e estados suportados.
-        </p>
       </header>
 
       <section className="space-y-3">

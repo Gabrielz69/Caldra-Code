@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { PerfilEContaCentral, type PerfilSectionId } from "@/components/profile/PerfilEContaCentral";
 
@@ -22,20 +23,25 @@ export const Route = createFileRoute("/perfil")({
 });
 
 function PerfilRouteComponent() {
-  let initialSection: PerfilSectionId | undefined;
-  if (typeof window !== "undefined") {
-    const hash = window.location.hash.replace("#", "");
-    if (
-      hash === "perfil" ||
-      hash === "conta" ||
-      hash === "pro" ||
-      hash === "aparencia" ||
-      hash === "preferencias" ||
-      hash === "dados"
-    ) {
-      initialSection = hash as PerfilSectionId;
+  const [initialSection, setInitialSection] = useState<PerfilSectionId | undefined>(undefined);
+
+  useEffect(() => {
+    try {
+      const hash = window.location.hash.replace("#", "");
+      if (
+        hash === "perfil" ||
+        hash === "conta" ||
+        hash === "pro" ||
+        hash === "aparencia" ||
+        hash === "preferencias" ||
+        hash === "dados"
+      ) {
+        setInitialSection(hash as PerfilSectionId);
+      }
+    } catch {
+      /* ignore */
     }
-  }
+  }, []);
 
   return <PerfilEContaCentral initialSection={initialSection} />;
 }

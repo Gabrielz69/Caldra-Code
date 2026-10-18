@@ -10,3 +10,5 @@ startTransition(() => {
     </StrictMode>,
   );
 });
+// CALDRA client entry
+

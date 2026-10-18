@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -7,11 +8,20 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { useFeatureAccess } from "@/lib/subscription/SubscriptionProvider";
 import { DEFAULT_REGION, regionOf, type Region, type RegionId } from "@/lib/regional/regional";
+import {
+  readAppearancePreferences,
+  persistAppearancePreferences,
+  checkIsProFromStorage,
+  CALDRA_SETTINGS_KEY,
+  type ThemeMode,
+  type AccentColor,
+  type AuroraStyle,
+} from "./appearancePreferences";
 
-export type ThemeMode = "light" | "dark" | "system" | "amoled";
-export type AccentColor = "default" | "amber" | "blue" | "crimson" | "magenta";
+export type { ThemeMode, AccentColor, AuroraStyle };
 export type AppLanguage = "pt" | "en" | "es";
 export type Unit = "mm" | "cm" | "m" | "in";
 /** APRENDIZ mostra fórmulas e dicas; MESTRE segue direto. Só apresentação. */
@@ -47,14 +57,14 @@ export type Settings = {
 };
 
 const DEFAULTS: Settings = {
-  theme: "dark",
-  accent: "crimson",
+  theme: "light",
+  accent: "blue",
   language: "pt",
   unit: "mm",
   precision: 2,
   level: "aprendiz",
   region: DEFAULT_REGION,
-  auroraStyle: "suave",
+  auroraStyle: "padrao",
   calcAngle: "DEG",
   calcPlaces: 4,
   cardOpacity: DEFAULT_CARD_OPACITY,
@@ -86,40 +96,31 @@ const SettingsContext = createContext<SettingsValue | null>(null);
  * pré-paint em `__root.tsx`. Sem isto o app pinta o tema padrão e depois
  * corrige (flash de tonalidade).
  */
-export function readStoredSettings(): Settings {
-  if (typeof window === "undefined") return DEFAULTS;
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return DEFAULTS;
-    const saved = JSON.parse(raw) as Omit<Partial<Settings>, "auroraStyle"> & {
-      aurora?: boolean;
-      auroraStyle?: AuroraStyle | "estatico";
-      accentAppliedCrimson?: boolean;
-    };
-    const VALID: AuroraStyle[] = ["fluido", "suave", "padrao"];
-    const LANGUAGES: AppLanguage[] = ["pt", "en", "es"];
-    const auroraStyle: AuroraStyle =
-      saved.aurora === false || saved.auroraStyle === "estatico"
-        ? "padrao"
-        : saved.auroraStyle && VALID.includes(saved.auroraStyle)
-          ? saved.theme === "light" && saved.auroraStyle === "padrao"
-            ? "fluido"
-            : saved.auroraStyle
-          : "fluido";
-    // conta já existente (sem o campo) começa em MESTRE; conta nova, APRENDIZ
-    const language = saved.language && LANGUAGES.includes(saved.language) ? saved.language : "pt";
+export function readStoredSettings(
+  isProOverride?: boolean,
+): Settings & { isProViolation?: boolean } {
+  const isPro = Boolean(
+    isProOverride ||
+      (typeof window !== "undefined" ? checkIsProFromStorage(window.localStorage) : false),
+  );
 
-    let accent: AccentColor = (saved.accent as AccentColor) || "crimson";
-    if (accent === "magenta" || !saved.accentAppliedCrimson) {
-      accent = "crimson";
-      saved.accent = "crimson";
-      saved.accentAppliedCrimson = true;
-      try {
-        window.localStorage.setItem(KEY, JSON.stringify({ ...saved, accent: "crimson", accentAppliedCrimson: true }));
-      } catch {
-        // ignora possíveis restrições de localStorage
-      }
-    }
+  const storage = typeof window !== "undefined" ? window.localStorage : null;
+  const appearance = readAppearancePreferences(storage, isPro);
+
+  const baseDefaults: Settings = {
+    ...DEFAULTS,
+    theme: appearance.theme,
+    accent: appearance.accent,
+    auroraStyle: appearance.auroraStyle,
+  };
+
+  if (!storage) return { ...baseDefaults, isProViolation: false };
+
+  try {
+    const raw = storage.getItem(KEY);
+    const saved = raw ? (JSON.parse(raw) as Partial<Settings>) : {};
+    const LANGUAGES: AppLanguage[] = ["pt", "en", "es"];
+    const language = saved.language && LANGUAGES.includes(saved.language) ? saved.language : "pt";
 
     const cardOpacity =
       typeof saved.cardOpacity === "number" && !isNaN(saved.cardOpacity)
@@ -131,23 +132,25 @@ export function readStoredSettings(): Settings {
         : DEFAULT_BUBBLE_OPACITY;
 
     return {
-      ...DEFAULTS,
-      level: saved.level ?? "mestre",
+      ...baseDefaults,
+      level: saved.level ?? "aprendiz",
       ...saved,
-      accent,
+      theme: appearance.theme,
+      accent: appearance.accent,
+      auroraStyle: appearance.auroraStyle,
       language,
-      auroraStyle,
       cardOpacity,
       bubbleOpacity,
+      isProViolation: appearance.isProViolation,
     };
   } catch {
-    return DEFAULTS;
+    return { ...baseDefaults, isProViolation: appearance.isProViolation };
   }
 }
 
 function applyToDom(s: Settings) {
   const root = document.documentElement;
-  const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? true;
+  const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
   const dark = s.theme === "dark" || s.theme === "amoled" || (s.theme === "system" && prefersDark);
   root.classList.toggle("dark", dark);
   root.classList.toggle("amoled", s.theme === "amoled");
@@ -175,26 +178,74 @@ function applyToDom(s: Settings) {
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  const { isMestre } = useFeatureAccess();
+  const isPro =
+    isMestre ||
+    (typeof window !== "undefined" ? checkIsProFromStorage(window.localStorage) : false);
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
   const hydrated = useRef(false);
   const [veil, setVeil] = useState(0);
-  const { isMestre } = useFeatureAccess();
   const skin = `${settings.theme}:${settings.accent}`;
   const prevSkin = useRef<string | null>(null);
 
+  const warnProFluidViolation = useCallback(() => {
+    toast.info("O estilo de fundo Fluido é exclusivo do CALDRA PRO.", {
+      description:
+        "Seu estilo foi revertido para Padrão. Faça upgrade para desbloquear o fundo dinâmico fluido.",
+      action: {
+        label: "Conhecer o PRO",
+        onClick: () => {
+          window.location.href = "/pro";
+        },
+      },
+      duration: 6000,
+    });
+  }, []);
+
+  const isInitialMount = useRef(true);
+
   /* Hidrata do armazenamento antes do primeiro paint. */
   useIsoLayoutEffect(() => {
-    const stored = readStoredSettings();
+    const stored = readStoredSettings(isPro);
     prevSkin.current = `${stored.theme}:${stored.accent}`;
     applyToDom(stored);
     setSettings(stored);
+    if (stored.isProViolation) {
+      warnProFluidViolation();
+    }
+    if (typeof window !== "undefined") {
+      persistAppearancePreferences(window.localStorage, stored);
+    }
     hydrated.current = true;
-  }, []);
+  }, [isPro, warnProFluidViolation]);
 
+  // Monitora se o status PRO muda e valida permissão do estilo fluido
   useEffect(() => {
     if (!hydrated.current) return;
+    if (!isPro && settings.auroraStyle === "fluido") {
+      setSettings((s) => ({ ...s, auroraStyle: "padrao" }));
+      if (typeof window !== "undefined") {
+        persistAppearancePreferences(window.localStorage, {
+          theme: settings.theme,
+          accent: settings.accent,
+          auroraStyle: "padrao",
+        });
+      }
+      warnProFluidViolation();
+    }
+  }, [isPro, settings.auroraStyle, settings.theme, settings.accent, warnProFluidViolation]);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    if (!hydrated.current) return;
     try {
-      window.localStorage.setItem(KEY, JSON.stringify(settings));
+      if (typeof window !== "undefined") {
+        persistAppearancePreferences(window.localStorage, settings);
+        window.localStorage.setItem(KEY, JSON.stringify(settings));
+      }
     } catch {
       /* ignore */
     }
@@ -216,19 +267,49 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<SettingsValue>(
     () => ({
       ...settings,
-      setTheme: (theme) =>
-        setSettings((s) => ({
-          ...s,
-          theme,
-          ...(theme === "light" ? { auroraStyle: "fluido" } : {}),
-        })),
-      setAccent: (accent) => setSettings((s) => ({ ...s, accent })),
+      setTheme: (theme) => {
+        setSettings((s) => {
+          const next = { ...s, theme };
+          if (typeof window !== "undefined") {
+            persistAppearancePreferences(window.localStorage, next);
+          }
+          return next;
+        });
+      },
+      setAccent: (accent) => {
+        setSettings((s) => {
+          const next = { ...s, accent };
+          if (typeof window !== "undefined") {
+            persistAppearancePreferences(window.localStorage, next);
+          }
+          return next;
+        });
+      },
       setLanguage: (language) => setSettings((s) => ({ ...s, language })),
       setUnit: (unit) => setSettings((s) => ({ ...s, unit })),
       setPrecision: (precision) => setSettings((s) => ({ ...s, precision })),
       setLevel: (level) => setSettings((s) => ({ ...s, level })),
       setRegion: (region) => setSettings((s) => ({ ...s, region })),
-      setAuroraStyle: (auroraStyle) => setSettings((s) => ({ ...s, auroraStyle })),
+      setAuroraStyle: (auroraStyle) => {
+        if (auroraStyle === "fluido" && !isPro) {
+          warnProFluidViolation();
+          setSettings((s) => {
+            const next = { ...s, auroraStyle: "padrao" as AuroraStyle };
+            if (typeof window !== "undefined") {
+              persistAppearancePreferences(window.localStorage, next);
+            }
+            return next;
+          });
+          return;
+        }
+        setSettings((s) => {
+          const next = { ...s, auroraStyle };
+          if (typeof window !== "undefined") {
+            persistAppearancePreferences(window.localStorage, next);
+          }
+          return next;
+        });
+      },
       setCalcAngle: (calcAngle) => setSettings((s) => ({ ...s, calcAngle })),
       setCalcPlaces: (calcPlaces) => setSettings((s) => ({ ...s, calcPlaces })),
       setCardOpacity: (cardOpacity) => {
@@ -240,18 +321,24 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setSettings((s) => ({ ...s, bubbleOpacity: val }));
       },
       resetAppearance: () => {
-        setSettings((s) => ({
-          ...s,
-          theme: "dark",
-          accent: "crimson",
-          auroraStyle: "suave",
-          cardOpacity: DEFAULT_CARD_OPACITY,
-          bubbleOpacity: DEFAULT_BUBBLE_OPACITY,
-        }));
+        setSettings((s) => {
+          const next = {
+            ...s,
+            theme: "light" as ThemeMode,
+            accent: "blue" as AccentColor,
+            auroraStyle: (isPro ? "fluido" : "padrao") as AuroraStyle,
+            cardOpacity: DEFAULT_CARD_OPACITY,
+            bubbleOpacity: DEFAULT_BUBBLE_OPACITY,
+          };
+          if (typeof window !== "undefined") {
+            persistAppearancePreferences(window.localStorage, next);
+          }
+          return next;
+        });
       },
       regionConfig: regionOf(settings.region),
     }),
-    [settings],
+    [settings, isPro, warnProFluidViolation],
   );
 
   return (

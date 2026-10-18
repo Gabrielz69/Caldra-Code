@@ -73,7 +73,7 @@ const AURORA_STYLES: { id: AuroraStyle; label: string; hint: string }[] = [
 const ACCENTS: { id: AccentColor; label: string; swatch: string }[] = [
   { id: "default", label: "Neutro / Monocromático", swatch: "var(--foreground)" },
   { id: "amber", label: "Âmbar Caldeiraria", swatch: "#F59E0B" },
-  { id: "blue", label: "Azul Técnico", swatch: "#00CCFF" },
+  { id: "blue", label: "Azul Técnico", swatch: "#0066FF" },
   { id: "crimson", label: "Vermelho Carmesim", swatch: "#B22222" },
 ];
 
@@ -243,7 +243,6 @@ export function PerfilEContaCentral({ initialSection }: PerfilEContaCentralProps
         badgeColor="text-amber-500"
         indicatorColor="bg-amber-500"
         title="Perfil e Conta"
-        description="Gerenciamento profissional, assinatura, preferências e personalização do CALDRA."
         actions={
           <>
             <button
@@ -814,9 +813,6 @@ export function PerfilEContaCentral({ initialSection }: PerfilEContaCentralProps
                       onClick={() => {
                         triggerHaptic("tap");
                         setTheme(t.id);
-                        if (t.id === "light") {
-                          setAuroraStyle("fluido");
-                        }
                       }}
                       className={cn(
                         "relative flex h-11 items-center justify-between rounded-xl border px-3 font-mono text-xs transition-all cursor-pointer",
@@ -984,24 +980,47 @@ export function PerfilEContaCentral({ initialSection }: PerfilEContaCentralProps
                 Estilo do Fundo (Aurora)
               </span>
               <div className="grid grid-cols-3 gap-2">
-                {AURORA_STYLES.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() => {
-                      triggerHaptic("tap");
-                      setAuroraStyle(a.id);
-                    }}
-                    className={cn(
-                      "h-11 rounded-xl border text-center font-mono text-xs uppercase transition-colors cursor-pointer",
-                      auroraStyle === a.id
-                        ? "border-amber-500/40 bg-amber-500/10 text-amber-500 font-bold"
-                        : "border-border/70 text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {a.label}
-                  </button>
-                ))}
+                {AURORA_STYLES.map((a) => {
+                  const isSelected = auroraStyle === a.id;
+                  const isProGated = a.id === "fluido" && !isMestre;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("tap");
+                        if (isProGated) {
+                          toast.info("O estilo de fundo Fluido é exclusivo do CALDRA PRO.", {
+                            description:
+                              "Faça upgrade para o CALDRA PRO para ativar o fundo dinâmico fluido.",
+                            action: {
+                              label: "Ver Planos",
+                              onClick: () => {
+                                window.location.href = "/pro";
+                              },
+                            },
+                          });
+                          return;
+                        }
+                        setAuroraStyle(a.id);
+                      }}
+                      className={cn(
+                        "relative h-11 rounded-xl border text-center font-mono text-xs uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5",
+                        isSelected
+                          ? "border-sky-500/50 bg-sky-500/10 text-sky-500 font-bold shadow-xs ring-1 ring-sky-500/30"
+                          : "border-border/70 text-muted-foreground hover:text-foreground",
+                        isProGated && !isSelected && "opacity-80",
+                      )}
+                    >
+                      <span>{a.label}</span>
+                      {isProGated && (
+                        <span className="rounded bg-amber-500/15 border border-amber-500/30 px-1 py-0.2 font-mono text-[8.5px] font-bold text-amber-500">
+                          PRO
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <p className="text-[10px] text-muted-foreground">
                 {AURORA_STYLES.find((a) => a.id === auroraStyle)?.hint}

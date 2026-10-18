@@ -87,16 +87,22 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-/** Tema aplicado SINCRONAMENTE antes do primeiro paint — sem flash. */
+/** Tema aplicado SINCRONAMENTE antes do primeiro paint — sem flash. Padrão inicial: Claro ('light') e Azul ('blue' / '#0066FF'). */
 const THEME_BOOT = `(function(){try{
+var tm=localStorage.getItem("caldra_theme_mode");
+var ac=localStorage.getItem("caldra_accent_color");
 var s=JSON.parse(localStorage.getItem("caldra.settings")||"{}");
-var t=s.theme||"dark";var a=s.accent||"crimson";if(!s.accentAppliedCrimson||a==="magenta"){a="crimson";}
+var t=tm||s.theme||"light";
+var a=ac||s.accent||"blue";
+if(a==="#0066FF"||a==="#0066ff"||a==="#007AFF"||a==="#00CCFF")a="blue";
+if(a==="#F59E0B"||a==="#f59e0b")a="amber";
+if(a==="#B22222"||a==="#b22222"||a==="magenta")a="crimson";
 var r=document.documentElement;
 var prefersDark=!window.matchMedia||window.matchMedia("(prefers-color-scheme: dark)").matches;
 var dark=t==="dark"||t==="amoled"||(t==="system"&&prefersDark);
 r.classList.toggle("dark",dark);r.classList.toggle("amoled",t==="amoled");
 r.classList.toggle("accent-default",a==="default");r.classList.toggle("accent-blue",a==="blue");
-var isCrimson=a==="crimson"||a==="magenta";
+var isCrimson=a==="crimson";
 r.classList.toggle("accent-crimson",isCrimson);r.classList.toggle("accent-magenta",isCrimson);
 var co=typeof s.cardOpacity==="number"?Math.min(100,Math.max(20,s.cardOpacity)):90;
 var bo=typeof s.bubbleOpacity==="number"?Math.min(100,Math.max(20,s.bubbleOpacity)):35;
@@ -168,7 +174,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR" className="dark bg-background" suppressHydrationWarning>
+    <html lang="pt-BR" className="accent-blue bg-background" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

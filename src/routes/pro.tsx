@@ -27,9 +27,6 @@ function ProPage() {
     <div className="mx-auto max-w-2xl space-y-4">
       <header>
         <h1 className="font-display text-2xl font-semibold">CALDRA PRO</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          O laboratório completo: da medida ao arquivo que a máquina corta.
-        </p>
       </header>
       <PaywallPanel />
     </div>

@@ -21,12 +21,6 @@ function Novidades() {
     <div className="mx-auto max-w-2xl space-y-4">
       <header>
         <h1 className="font-display text-2xl font-semibold">Novidades</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Versão atual {APP_VERSION} · compilação {APP_BUILD} ·{" "}
-          <Link to="/perfil" className="underline">
-            Perfil e Conta
-          </Link>
-        </p>
       </header>
 
       {CHANGELOG.map((entry) => (

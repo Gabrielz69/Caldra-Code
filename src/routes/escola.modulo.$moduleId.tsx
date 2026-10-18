@@ -46,7 +46,6 @@ function ModulePage() {
           <ChevronLeft className="size-3" /> Estudos
         </Link>
         <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{mod.title}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{mod.summary}</p>
         <div className="mt-3 h-1 overflow-hidden rounded-full bg-foreground/10">
           <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
         </div>

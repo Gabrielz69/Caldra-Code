@@ -103,9 +103,7 @@ export function BubbleNav() {
   const resolvedActiveIndex = activeIndex >= 0 ? activeIndex : 2; // Default Início
 
   // Largura do contêiner para calcular a largura de cada slot (W / 5)
-  const [containerWidth, setContainerWidth] = useState<number>(() =>
-    typeof window !== "undefined" ? window.innerWidth : 390,
-  );
+  const [containerWidth, setContainerWidth] = useState<number>(390);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Estados de arrasto do tambor rotativo infinito

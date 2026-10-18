@@ -202,9 +202,6 @@ export function ScientificCalculator() {
             <h1 className="truncate text-[18px] font-semibold sm:text-[21px]">
               Calculadora Científica
             </h1>
-            <p className="mt-0.5 text-[12px] text-calc-muted sm:text-sm">
-              Rápida <span>·</span> Precisa <span>·</span> Essencial
-            </p>
           </div>
           <button
             type="button"

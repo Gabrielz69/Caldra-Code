@@ -52,7 +52,6 @@ function EstudosIndex() {
           </span>
         }
         title="Estudos Técnicos"
-        description="Do zero à competência: conceito, fórmula fundamentada, simulação e prática de caldeiraria."
       />
 
       <Panel className="p-4">

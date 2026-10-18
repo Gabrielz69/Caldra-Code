@@ -368,7 +368,7 @@ function load(): State {
       const taken = new Set<string>();
       state = { projects: (parsed.projects ?? []).map((p) => normalizeProject(p, taken)) };
     } else {
-      state = { projects: [seedProject()] };
+      state = { projects: seedProjects() };
       persist(state);
     }
   } catch {
@@ -983,8 +983,9 @@ export function getPart(projectId: string, instanceId: string): ProjectPart | nu
 /* Semente inicial (exemplo real, editável e removível)                */
 /* ------------------------------------------------------------------ */
 
-function seedProject(): Project {
+function seedProjects(): Project[] {
   const now = Date.now();
+  const taken = new Set<string>();
   const mk = (
     modelId: string,
     name: string,
@@ -1005,27 +1006,53 @@ function seedProject(): Project {
       updatedAt: now,
     });
 
-  return normalizeProject({
-    name: "Chaminé Industrial",
-    client: "João da Silva",
-    description: "Fabricação e instalação de chaminé industrial.",
-    type: "cliente",
-    place: "Metalúrgica Serra Azul",
-    notes: "Virolas em aço carbono, solda de topo.",
-    createdAt: now,
-    updatedAt: now,
-    history: [{ at: now, text: "Projeto criado" }],
-    parts: [
-      mk(
-        "cald.tronco-de-cone",
-        "Cone de transição",
-        { d1: 700, d2: 400, h: 600, thickness: 4 },
-        4,
-        1,
-        "calculada",
-      ),
-      mk("cald.flanges", "Flange de base", { d: 820, holes: 12, thickness: 12 }, 12, 2, "rascunho"),
-      mk("cald.cilindro", "Duto reto", { d: 400, h: 1500, thickness: 3 }, 3, 3, "exportada"),
-    ],
-  });
+  const p1 = normalizeProject(
+    {
+      name: "Chaminé Industrial",
+      client: "João da Silva",
+      description: "Fabricação e instalação de chaminé industrial.",
+      type: "cliente",
+      place: "Metalúrgica Serra Azul",
+      notes: "Virolas em aço carbono, solda de topo.",
+      status: "em-desenvolvimento",
+      createdAt: now,
+      updatedAt: now,
+      history: [{ at: now, text: "Projeto criado" }],
+      parts: [
+        mk(
+          "cald.tronco-de-cone",
+          "Cone de transição",
+          { d1: 700, d2: 400, h: 600, thickness: 4 },
+          4,
+          1,
+          "calculada",
+        ),
+        mk("cald.flanges", "Flange de base", { d: 820, holes: 12, thickness: 12 }, 12, 2, "rascunho"),
+        mk("cald.cilindro", "Duto reto", { d: 400, h: 1500, thickness: 3 }, 3, 3, "exportada"),
+      ],
+    },
+    taken,
+  );
+
+  const p2 = normalizeProject(
+    {
+      name: "Flange Circular",
+      client: "Usina Vale Verde",
+      description: "Conjunto de flanges furados e colarinho para linha de exaustão.",
+      type: "industrial",
+      place: "Planta Industrial Setor B",
+      notes: "Furação concêntrica Ø18mm em chapa 1/2 pol.",
+      status: "em-producao",
+      createdAt: now - 3600_000,
+      updatedAt: now - 3600_000,
+      history: [{ at: now - 3600_000, text: "Projeto criado" }],
+      parts: [
+        mk("cald.flanges", "Flange principal Ø600", { d: 600, holes: 8, thickness: 12.7 }, 12.7, 2, "em-producao"),
+        mk("cald.cilindro", "Colarinho de acoplamento", { d: 450, h: 250, thickness: 6.35 }, 6.35, 2, "calculada"),
+      ],
+    },
+    taken,
+  );
+
+  return [p1, p2];
 }

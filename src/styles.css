@@ -582,14 +582,26 @@
   --gradient-brand: linear-gradient(120deg, var(--foreground), var(--muted-foreground));
 }
 
+/* Azul Oficial CALDRA #0066FF — vívido e de alto contraste em modo claro, luminoso em modo escuro */
 .accent-blue {
-  --primary: oklch(0.75 0.145 226); /* #00CCFF */
-  --primary-foreground: oklch(0.16 0.01 240);
-  --accent: oklch(0.75 0.145 226);
-  --accent-foreground: oklch(0.16 0.01 240);
-  --accent2: oklch(0.86 0.14 195);
-  --ring: oklch(0.75 0.145 226);
-  --gradient-brand: linear-gradient(120deg, var(--accent), oklch(0.86 0.14 195));
+  --primary: #0066FF;
+  --primary-foreground: #ffffff;
+  --accent: #0066FF;
+  --accent-foreground: #ffffff;
+  --accent2: #0099FF;
+  --ring: #0066FF;
+  --gradient-brand: linear-gradient(120deg, #0066FF, #00C8FF);
+}
+
+.dark.accent-blue,
+.dark .accent-blue {
+  --primary: #0066FF;
+  --primary-foreground: #ffffff;
+  --accent: #38BDF8;
+  --accent-foreground: #090D16;
+  --accent2: #00CCFF;
+  --ring: #38BDF8;
+  --gradient-brand: linear-gradient(120deg, #0066FF, #38BDF8);
 }
 
 /* Vermelho Carmesim #B22222 — sólido para controles; no escuro o acento ganha luminosidade (#E53935). */

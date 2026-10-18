@@ -107,7 +107,6 @@ function Projetos() {
           </span>
         }
         title="Projetos"
-        description="Modelos paramétricos de caldeiraria e acompanhamento de dossiês de fabricação."
         actions={
           <button
             onClick={startNew}
