@@ -1,5 +1,4 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import { test, expect } from "vitest";
 import {
   readAppearancePreferences,
   persistAppearancePreferences,
@@ -29,20 +28,20 @@ test("Critério 1: Primeiro acesso sem preferências inicia nativamente em Claro
   const storage = createMockStorage(); // Vazio
   const prefs = readAppearancePreferences(storage, false /* isPro = false */);
 
-  assert.equal(prefs.theme, "light", "Tema padrão deve ser 'light'");
-  assert.equal(prefs.accent, "blue", "Cor de destaque padrão deve ser 'blue'");
-  assert.equal(prefs.auroraStyle, "padrao", "Estilo de fundo deve ser 'padrao' para free");
-  assert.equal(prefs.isProViolation, false);
+  expect(prefs.theme).toBe("light");
+  expect(prefs.accent).toBe("blue");
+  expect(prefs.auroraStyle).toBe("padrao");
+  expect(prefs.isProViolation).toBe(false);
 });
 
 test("Critério 1 (PRO): Primeiro acesso sem preferências com conta PRO inicia nativamente em Claro, Azul e Fluido", () => {
   const storage = createMockStorage({ [CALDRA_PLAN_KEY]: "pro" });
   const prefs = readAppearancePreferences(storage, true /* isPro = true */);
 
-  assert.equal(prefs.theme, "light", "Tema padrão deve ser 'light'");
-  assert.equal(prefs.accent, "blue", "Cor de destaque padrão deve ser 'blue'");
-  assert.equal(prefs.auroraStyle, "fluido", "Estilo de fundo deve ser 'fluido' para PRO");
-  assert.equal(prefs.isProViolation, false);
+  expect(prefs.theme).toBe("light");
+  expect(prefs.accent).toBe("blue");
+  expect(prefs.auroraStyle).toBe("fluido");
+  expect(prefs.isProViolation).toBe(false);
 });
 
 test("Critério 2: Persistência de alterações manuais no localStorage", () => {
@@ -54,15 +53,15 @@ test("Critério 2: Persistência de alterações manuais no localStorage", () =>
     auroraStyle: "padrao",
   });
 
-  assert.equal(storage.getItem(CALDRA_THEME_MODE_KEY), "dark");
-  assert.equal(storage.getItem(CALDRA_ACCENT_COLOR_KEY), CALDRA_OFFICIAL_BLUE);
-  assert.equal(storage.getItem(CALDRA_BG_STYLE_KEY), "default");
+  expect(storage.getItem(CALDRA_THEME_MODE_KEY)).toBe("dark");
+  expect(storage.getItem(CALDRA_ACCENT_COLOR_KEY)).toBe(CALDRA_OFFICIAL_BLUE);
+  expect(storage.getItem(CALDRA_BG_STYLE_KEY)).toBe("default");
 
   // Reabre e relê do armazenamento
   const reloaded = readAppearancePreferences(storage, false);
-  assert.equal(reloaded.theme, "dark");
-  assert.equal(reloaded.accent, "blue");
-  assert.equal(reloaded.auroraStyle, "padrao");
+  expect(reloaded.theme).toBe("dark");
+  expect(reloaded.accent).toBe("blue");
+  expect(reloaded.auroraStyle).toBe("padrao");
 });
 
 test("Critério 3: Validação de Segurança para o Estilo Fluido em contas Não-PRO", () => {
@@ -76,24 +75,24 @@ test("Critério 3: Validação de Segurança para o Estilo Fluido em contas Não
 
   const prefs = readAppearancePreferences(storage, false /* isPro = false */);
 
-  assert.equal(prefs.auroraStyle, "padrao", "Deve reverter automaticamente para 'padrao'");
-  assert.equal(prefs.isProViolation, true, "Deve sinalizar violação de permissão PRO");
-  assert.equal(storage.getItem(CALDRA_BG_STYLE_KEY), "default", "Deve corrigir a chave no storage");
+  expect(prefs.auroraStyle).toBe("padrao");
+  expect(prefs.isProViolation).toBe(true);
+  expect(storage.getItem(CALDRA_BG_STYLE_KEY)).toBe("default");
 });
 
 test("Normalização de cores e formatos aceita aliases amigáveis e hexadecimais", () => {
-  assert.equal(normalizeAccentColor("#0066FF"), "blue");
-  assert.equal(normalizeAccentColor("#00CCFF"), "blue");
-  assert.equal(normalizeAccentColor("blue"), "blue");
-  assert.equal(normalizeAccentColor("#F59E0B"), "amber");
-  assert.equal(normalizeAccentColor("amber"), "amber");
-  assert.equal(normalizeAccentColor("#B22222"), "crimson");
-  assert.equal(normalizeAccentColor("magenta"), "crimson");
+  expect(normalizeAccentColor("#0066FF")).toBe("blue");
+  expect(normalizeAccentColor("#00CCFF")).toBe("blue");
+  expect(normalizeAccentColor("blue")).toBe("blue");
+  expect(normalizeAccentColor("#F59E0B")).toBe("amber");
+  expect(normalizeAccentColor("amber")).toBe("amber");
+  expect(normalizeAccentColor("#B22222")).toBe("crimson");
+  expect(normalizeAccentColor("magenta")).toBe("crimson");
 
-  assert.equal(toInternalAuroraStyle("fluid"), "fluido");
-  assert.equal(toInternalAuroraStyle("fluido"), "fluido");
-  assert.equal(toInternalAuroraStyle("default"), "padrao");
-  assert.equal(toInternalAuroraStyle("padrao"), "padrao");
-  assert.equal(toExternalBgStyle("fluido"), "fluid");
-  assert.equal(toExternalBgStyle("padrao"), "default");
+  expect(toInternalAuroraStyle("fluid")).toBe("fluido");
+  expect(toInternalAuroraStyle("fluido")).toBe("fluido");
+  expect(toInternalAuroraStyle("default")).toBe("padrao");
+  expect(toInternalAuroraStyle("padrao")).toBe("padrao");
+  expect(toExternalBgStyle("fluido")).toBe("fluid");
+  expect(toExternalBgStyle("padrao")).toBe("default");
 });

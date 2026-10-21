@@ -370,6 +370,40 @@ function loopEdges(pts: Vec3[]): Edge[] {
   return pts.map((p, i) => [p, pts[(i + 1) % pts.length]!] as Edge);
 }
 
+function newellDirection(pts: Vec3[]): Vec3 {
+  let nx = 0;
+  let ny = 0;
+  let nz = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i]!;
+    const b = pts[(i + 1) % pts.length]!;
+    nx += (a.y - b.y) * (a.z + b.z);
+    ny += (a.z - b.z) * (a.x + b.x);
+    nz += (a.x - b.x) * (a.y + b.y);
+  }
+  return v(nx, ny, nz);
+}
+
+/**
+ * Garante que a face externa (`outer`) tenha normal apontando da parede interna
+ * para a parede externa, e que a face interna (`inner`) tenha normal apontando
+ * para dentro da cavidade da peça.
+ */
+function orientWallPair(outerPts: Vec3[], innerPts: Vec3[]): { outer: Vec3[]; inner: Vec3[] } {
+  const co = centroid(outerPts);
+  const ci = centroid(innerPts);
+  const dx = co.x - ci.x;
+  const dy = co.y - ci.y;
+  const dz = co.z - ci.z;
+  const nOut = newellDirection(outerPts);
+  const dotOut = nOut.x * dx + nOut.y * dy + nOut.z * dz;
+  const outer = dotOut < 0 ? outerPts.slice().reverse() : outerPts;
+  const nIn = newellDirection(innerPts);
+  const dotIn = nIn.x * dx + nIn.y * dy + nIn.z * dz;
+  const inner = dotIn > 0 ? innerPts.slice().reverse() : innerPts;
+  return { outer, inner };
+}
+
 /**
  * Casca de parede fina a partir de uma sequência de contornos.
  * Gera superfície externa, superfície interna, bordas (rim) das aberturas,
@@ -397,9 +431,13 @@ function shell(loops: Vec3[][], o: ShellOpts): Geo {
     const bi = inner[s + 1]!;
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
-      faces.push({ pts: [a[i]!, a[j]!, b[j]!, b[i]!], kind: "outer" });
+      const oriented = orientWallPair(
+        [a[i]!, a[j]!, b[j]!, b[i]!],
+        [bi[i]!, bi[j]!, ai[j]!, ai[i]!],
+      );
+      faces.push({ pts: oriented.outer, kind: "outer" });
       faceTags.push(faceTag(i));
-      faces.push({ pts: [bi[i]!, bi[j]!, ai[j]!, ai[i]!], kind: "inner" });
+      faces.push({ pts: oriented.inner, kind: "inner" });
       faceTags.push(faceTag(i));
     }
   }
@@ -663,10 +701,12 @@ export function buildWire(slug: string, raw: WireParams): WireModel {
       const edgeKinds: EntityKind[] = [];
       const genN = canonical.generatrices.length;
       for (const face of canonical.faces) {
-        const outer = face.points.map(cv);
-        const inner = face.points.map((q) => inset(q));
-        faces.push({ pts: outer, kind: "outer" });
-        faces.push({ pts: inner.slice().reverse(), kind: "inner" });
+        const oriented = orientWallPair(
+          face.points.map(cv),
+          face.points.map((q) => inset(q)),
+        );
+        faces.push({ pts: oriented.outer, kind: "outer" });
+        faces.push({ pts: oriented.inner, kind: "inner" });
       }
 
       // 1. Geratrizes: as que dividem as faces planas dos cantos curvos (as 4 dobras principais dos cantos)

@@ -249,3 +249,5 @@ export class DynamicDimensionInteraction {
     return dims;
   }
 }
+
+export { DimensionInteractionEngine } from "./cadDimensionInteractionEngine";

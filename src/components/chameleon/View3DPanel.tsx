@@ -19,7 +19,16 @@ import {
 } from "@/lib/viz3d/cameraPresets";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Activity, ChevronRight, Maximize2, Move, Rotate3d, Spline } from "lucide-react";
+import {
+  Activity,
+  Layers,
+  Maximize2,
+  Minimize2,
+  Move,
+  Rotate3d,
+  RotateCcw,
+  Spline,
+} from "lucide-react";
 import { Viz3DDiagnosticModal } from "./Viz3DDiagnosticModal";
 import { Wire3D } from "./Wire3D";
 
@@ -203,11 +212,37 @@ export function View3DPanel({
   const [interactionMode, setInteractionMode] = useState<"orbit" | "pan">("orbit");
   const [showExtendedViews, setShowExtendedViews] = useState(false);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const presetsToRender = showExtendedViews ? EXTENDED_VIEW_PRESETS : VIEW_PRESETS;
 
   return (
-    <div className="grid-bg-fine relative size-full">
+    <div
+      className={cn(
+        "grid-bg-fine relative overflow-hidden bg-gradient-to-b from-[#090B0F] to-[#050608]",
+        isExpanded
+          ? "fixed inset-3 z-50 rounded-2xl border border-zinc-700/90 shadow-2xl"
+          : "size-full",
+      )}
+    >
+      {/* Grade pontilhada técnica + luz radial superior-esquerda */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-25"
+        style={{
+          backgroundImage:
+            "radial-gradient(#38bdf8 0.75px, transparent 0.75px), radial-gradient(#f59e0b 0.5px, transparent 0.5px)",
+          backgroundSize: "20px 20px, 40px 40px",
+          backgroundPosition: "0 0, 10px 10px",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 26% 22%, rgba(148, 163, 184, 0.14) 0%, rgba(15, 23, 42, 0.04) 48%, transparent 75%)",
+        }}
+      />
+
       <Wire3D
         interactive
         mode={interactionMode}
@@ -220,14 +255,14 @@ export function View3DPanel({
         refForFace={selection?.refForFace}
         highlightRef={selection?.highlightRef}
         onSelectRef={selection?.onSelectRef}
-        className="size-full text-foreground/80"
+        className="relative z-10 size-full text-foreground/80"
       />
 
       {/* Controles de Vista, Arestas e Ferramentas Técnicas */}
-      <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5 max-w-[calc(100%-120px)]">
+      <div className="absolute top-2 left-2 z-20 flex flex-col gap-1.5 max-w-[calc(100%-120px)]">
         {/* Barra de Vistas */}
         <div
-          className="flex flex-wrap items-center gap-0.5 rounded-md border border-line bg-background/85 p-0.5 shadow-sm backdrop-blur"
+          className="flex flex-wrap items-center gap-0.5 rounded-md border border-zinc-800/90 bg-zinc-950/85 p-0.5 shadow-sm backdrop-blur"
           role="group"
           aria-label="Vistas padrão da câmera"
         >
@@ -244,8 +279,8 @@ export function View3DPanel({
                 setViewNonce((n) => n + 1);
               }}
               className={cn(
-                "h-6 min-w-7 px-1.5 font-mono text-[9px] uppercase shadow-none",
-                view === preset.id && "bg-accent/15 text-accent font-semibold",
+                "h-6 min-w-7 px-1.5 font-mono text-[9px] uppercase shadow-none text-zinc-300",
+                view === preset.id && "bg-amber-500/20 text-amber-400 font-semibold",
               )}
             >
               {preset.label}
@@ -257,7 +292,7 @@ export function View3DPanel({
             variant="ghost"
             title={showExtendedViews ? "Menos vistas" : "Todas as vistas (ISO, FR, TRAS, LAT, DIR, ESQ, SUP, INF)"}
             onClick={() => setShowExtendedViews((v) => !v)}
-            className="h-6 px-1 font-mono text-[9px] text-muted-foreground hover:text-accent shadow-none"
+            className="h-6 px-1 font-mono text-[9px] text-zinc-400 hover:text-amber-400 shadow-none"
           >
             {showExtendedViews ? "–" : "+"}
           </Button>
@@ -266,7 +301,7 @@ export function View3DPanel({
         {/* Barra de Modos de Aresta e Ferramentas */}
         <div className="flex flex-wrap items-center gap-1">
           <div
-            className="flex rounded-md border border-line bg-background/85 p-0.5 shadow-sm backdrop-blur"
+            className="flex rounded-md border border-zinc-800/90 bg-zinc-950/85 p-0.5 shadow-sm backdrop-blur"
             role="group"
             aria-label="Modo de aresta técnica"
           >
@@ -280,8 +315,8 @@ export function View3DPanel({
                 aria-pressed={edgeMode === item.id}
                 onClick={() => setEdgeMode(item.id)}
                 className={cn(
-                  "h-6 px-1.5 font-mono text-[9px] uppercase shadow-none",
-                  edgeMode === item.id && "bg-accent/15 text-accent font-semibold",
+                  "h-6 px-1.5 font-mono text-[9px] uppercase shadow-none text-zinc-300",
+                  edgeMode === item.id && "bg-amber-500/20 text-amber-400 font-semibold",
                 )}
               >
                 {item.label}
@@ -289,9 +324,9 @@ export function View3DPanel({
             ))}
           </div>
 
-          {/* Ferramentas de Interação: Girar / Mover / Centralizar */}
+          {/* Ferramentas de Interação: Girar / Mover */}
           <div
-            className="flex rounded-md border border-line bg-background/85 p-0.5 shadow-sm backdrop-blur"
+            className="flex rounded-md border border-zinc-800/90 bg-zinc-950/85 p-0.5 shadow-sm backdrop-blur"
             role="group"
             aria-label="Navegação espacial"
           >
@@ -299,12 +334,12 @@ export function View3DPanel({
               type="button"
               size="sm"
               variant="ghost"
-              title="Girar modelo (Órbita 3D)"
+              title="Girar modelo (Órbita 3D 360°)"
               aria-pressed={interactionMode === "orbit"}
               onClick={() => setInteractionMode("orbit")}
               className={cn(
-                "h-6 px-1.5 font-mono text-[9px] uppercase shadow-none gap-1",
-                interactionMode === "orbit" && "bg-accent/15 text-accent font-semibold",
+                "h-6 px-1.5 font-mono text-[9px] uppercase shadow-none gap-1 text-zinc-300",
+                interactionMode === "orbit" && "bg-amber-500/20 text-amber-400 font-semibold",
               )}
             >
               <Rotate3d className="size-3" />
@@ -317,21 +352,11 @@ export function View3DPanel({
               aria-pressed={interactionMode === "pan"}
               onClick={() => setInteractionMode("pan")}
               className={cn(
-                "h-6 px-1.5 font-mono text-[9px] uppercase shadow-none gap-1",
-                interactionMode === "pan" && "bg-accent/15 text-accent font-semibold",
+                "h-6 px-1.5 font-mono text-[9px] uppercase shadow-none gap-1 text-zinc-300",
+                interactionMode === "pan" && "bg-amber-500/20 text-amber-400 font-semibold",
               )}
             >
               <Move className="size-3" />
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              title="Centralizar e reenquadrar modelo (Fit)"
-              onClick={() => setViewNonce((n) => n + 1)}
-              className="h-6 px-1.5 font-mono text-[9px] uppercase shadow-none text-muted-foreground hover:text-accent"
-            >
-              <Maximize2 className="size-3" />
             </Button>
           </div>
 
@@ -342,7 +367,7 @@ export function View3DPanel({
             variant="ghost"
             title="Abrir Central de Diagnóstico e Auditoria 3D"
             onClick={() => setShowDiagnostic(true)}
-            className="h-6 px-2 rounded-md border border-line bg-background/85 font-mono text-[9px] text-muted-foreground hover:text-accent uppercase shadow-none gap-1"
+            className="h-6 px-2 rounded-md border border-zinc-800/90 bg-zinc-950/85 font-mono text-[9px] text-zinc-300 hover:text-amber-400 uppercase shadow-none gap-1"
           >
             <Activity className="size-3" />
             DIAG
@@ -356,8 +381,9 @@ export function View3DPanel({
         onClose={() => setShowDiagnostic(false)}
       />
 
-      <div className="absolute inset-x-4 bottom-3 flex items-center gap-3">
-        <span className="font-mono text-[9px] text-muted-foreground uppercase">3D</span>
+      {/* Controle de Planificação (inferior esquerdo) */}
+      <div className="absolute left-3 right-32 bottom-2.5 z-20 flex items-center gap-2.5">
+        <span className="font-mono text-[9px] text-zinc-400 uppercase">360°</span>
         <input
           type="range"
           min={0}
@@ -365,17 +391,67 @@ export function View3DPanel({
           value={unfold * 100}
           onChange={(e) => onUnfold(Number(e.target.value) / 100)}
           aria-label="Abrir peça"
-          className="h-1 flex-1 accent-[var(--accent)]"
+          className="h-1 flex-1 accent-amber-400"
         />
         <Button
           type="button"
           size="sm"
           variant="ghost"
           onClick={onPlanificar}
-          className="h-7 px-2 font-mono text-[9px] text-accent uppercase shadow-none"
+          className="h-6 px-2 font-mono text-[9px] text-amber-400 hover:text-amber-300 uppercase shadow-none"
         >
           Planificar
         </Button>
+      </div>
+
+      {/* Barra de Ferramentas Flutuante (Bottom-Right do Visor: 3 botões circulares escuros com ícones dourados/brancos) */}
+      <div
+        className="absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5"
+        role="group"
+        aria-label="Controles flutuantes do visor 3D"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setView(DEFAULT_VIEW);
+            setViewNonce((n) => n + 1);
+          }}
+          className="flex size-8 items-center justify-center rounded-full border border-zinc-700/80 bg-zinc-900/90 text-amber-400 shadow-lg backdrop-blur-md transition-all hover:border-amber-500/50 hover:bg-zinc-800 active:scale-95 cursor-pointer"
+          title="Resetar Rotação / Vista Padrão"
+          aria-label="Resetar Rotação / Vista Padrão"
+        >
+          <RotateCcw className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            setEdgeMode((m) => (m === "shaded-edges" ? "wireframe" : "shaded-edges"))
+          }
+          className={cn(
+            "flex size-8 items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer",
+            edgeMode === "shaded-edges"
+              ? "border-amber-500/50 bg-zinc-900/90 text-amber-400 hover:bg-zinc-800"
+              : "border-zinc-700/80 bg-zinc-900/90 text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800",
+          )}
+          title="Alternar Modo de Camadas / Wireframe vs. Sólido"
+          aria-label="Alternar Modo de Camadas / Wireframe vs. Sólido"
+        >
+          <Layers className="size-3.5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsExpanded((v) => !v)}
+          className={cn(
+            "flex size-8 items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer",
+            isExpanded
+              ? "border-amber-500/50 bg-zinc-900/90 text-amber-400 hover:bg-zinc-800"
+              : "border-zinc-700/80 bg-zinc-900/90 text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800",
+          )}
+          title={isExpanded ? "Recolher Tela Cheia" : "Tela Cheia / Expandir"}
+          aria-label={isExpanded ? "Recolher Tela Cheia" : "Tela Cheia / Expandir"}
+        >
+          {isExpanded ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+        </button>
       </div>
     </div>
   );

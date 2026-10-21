@@ -39,6 +39,7 @@ import {
   RotateCw,
   Move,
   Copy,
+  ClipboardList,
   FlipHorizontal,
   Maximize2,
   Minimize2,
@@ -119,6 +120,7 @@ interface ChamferCadToolbarProps {
   onOpenPresets?: () => void;
   onOpenTechnicalSheet?: () => void;
   onOpenVariables?: () => void;
+  onOpenClipboard?: () => void;
 
   // Precisão
   snapOn: boolean;
@@ -190,6 +192,7 @@ export function ChamferCadToolbar({
   onOpenPresets,
   onOpenTechnicalSheet,
   onOpenVariables,
+  onOpenClipboard,
   snapOn,
   setSnapOn,
   showGrid,
@@ -368,7 +371,7 @@ export function ChamferCadToolbar({
       label: "Modificar",
       short: "MOD",
       icon: Scissors,
-      desc: "Mover, girar, aparar, espelhar, offset",
+      desc: "Área de Transferência, mover, girar, aparar, espelhar, offset",
     },
     {
       id: "precisao" as const,
@@ -769,6 +772,16 @@ export function ChamferCadToolbar({
                 {/* 3. GRUPO: MODIFICAR */}
                 {openCat === "modificar" && (
                   <div className="flex flex-col gap-0.5 font-mono text-xs">
+                    <FlyoutItem
+                      label="Área de Transferência"
+                      keyLabel="CLIP"
+                      icon={ClipboardList}
+                      onClick={() => {
+                        onOpenClipboard?.();
+                        setOpenCat("none");
+                      }}
+                      desc="Painel global: formas copiadas, itens fixados (📌) e colar"
+                    />
                     <FlyoutItem
                       label="Mover"
                       keyLabel="M"

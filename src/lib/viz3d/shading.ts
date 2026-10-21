@@ -29,8 +29,8 @@ export type FaceMaterial = {
  * (--solid-*) para que claro/escuro/AMOLED continuem coerentes.
  */
 export const FACE_MATERIALS: Record<string, FaceMaterial> = {
-  outer: { base: "var(--solid-lo)", hi: "var(--solid-hi)", gain: 1.05, amb: 0.04 },
-  inner: { base: "var(--solid-in)", hi: "var(--solid-lo)", gain: 0.8, amb: 0.1 },
-  rim: { base: "var(--solid-lo)", hi: "var(--solid-rim)", gain: 1.1, amb: 0.2 },
-  cap: { base: "var(--solid-lo)", hi: "var(--solid-hi)", gain: 0.95, amb: 0.08 },
+  outer: { base: "var(--solid-lo)", hi: "var(--solid-hi)", gain: 0.78, amb: 0.22 },
+  inner: { base: "#232b38", hi: "var(--solid-in)", gain: 0.62, amb: 0.16 },
+  rim: { base: "var(--solid-lo)", hi: "var(--solid-rim)", gain: 0.68, amb: 0.32 },
+  cap: { base: "var(--solid-lo)", hi: "var(--solid-hi)", gain: 0.74, amb: 0.24 },
 };

@@ -184,7 +184,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <MasterModeDialog open={masterOpen} onOpenChange={setMasterOpen} />
         <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
         <PaywallDialog />
-        {intro.show && !startupGenesis && <Intro onDone={intro.done} />}
+        {intro.show && !startupGenesis && !autostart && <Intro onDone={intro.done} />}
         {showOnboarding && <Onboarding />}
         {startupGenesis && (
           <CaldraGenesisPreIntro

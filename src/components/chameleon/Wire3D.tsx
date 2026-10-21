@@ -73,7 +73,7 @@ export function Wire3D({
   autoSpin = false,
   mode = "orbit",
   unfold = 0,
-  lineVisibility = "technical-persistent",
+  lineVisibility,
   view,
   viewNonce = 0,
   edgeMode = "shaded-edges",
@@ -89,13 +89,25 @@ export function Wire3D({
   const drag = useRef<{ x: number; y: number } | null>(null);
   const dragMode = useRef<"orbit" | "pan">("orbit");
   const downAt = useRef<{ x: number; y: number } | null>(null);
+  const velocity = useRef<{ vx: number; vy: number }>({ vx: 0, vy: 0 });
+  const inertiaRaf = useRef<number>(0);
   const resume = useRef(0);
 
   /* vista padrão / reenquadramento: só orientação e zoom de fit */
   useEffect(() => {
-    if (!view) return;
-    setCam(cameraForView(view));
+    if (view) {
+      setCam(cameraForView(view));
+    } else if (viewNonce > 0) {
+      setCam({ yaw: 0.7, pitch: 0.4, zoom: 1, panX: 0, panY: 0 });
+    }
   }, [view, viewNonce]);
+
+  useEffect(() => {
+    return () => {
+      if (inertiaRaf.current) cancelAnimationFrame(inertiaRaf.current);
+    };
+  }, []);
+
   const host = useRef<SVGSVGElement>(null);
   const [visible, setVisible] = useState(true);
 
@@ -200,45 +212,52 @@ export function Wire3D({
       const nx = cn.x;
       const ny = cn.y;
       const nz = cn.z;
-      // Visibilidade da superfície interna: regra geométrica determinística.
-      // A parede interna só é observável quando sua normal (que aponta para
-      // dentro da peça) está voltada ao observador — isto é, a parede do lado
-      // oposto, vista através da boca aberta. A parede interna próxima fica
-      // atrás da superfície externa e não é desenhada.
+      // Visibilidade determinística das superfícies:
+      // - A parede interna só é observável quando sua normal (que aponta para
+      //   dentro da peça) está voltada ao observador (nz > 0), vista através da boca.
+      // - A parede externa (normal apontando para fora) só é visível quando
+      //   voltada ao observador (nz >= -0.03) na peça montada, evitando que faces
+      //   traseiras encubram a parede interna ou conflitem com as frontais.
       if (face.kind === "inner" && nz <= 0) return;
-      // dupla face: a superfície interna é iluminada pela normal invertida
-      const s = nz < 0 ? -1 : 1;
+      if (face.kind === "outer" && unfold < 0.05 && nz < -0.03) return;
+      if (face.kind === "rim" && unfold < 0.05 && mn.y < -0.5 && cam.pitch > 0.05) return;
+      const s = unfold >= 0.05 && nz < 0 ? -1 : 1;
       const key = Math.max(0, nx * s * KEY.x + ny * s * KEY.y + nz * s * KEY.z);
       const fill = Math.max(0, nx * s * FILL.x + ny * s * FILL.y + nz * s * FILL.z);
       const rim = Math.pow(1 - Math.abs(nz), 3);
       const m = MAT[face.kind] ?? MAT["outer"]!;
-      // difuso + preenchimento + reflexo especular discreto (metal semiacetinado)
-      const spec = Math.pow(key, 16) * 0.25;
-      const lum = m.amb + m.gain * (0.82 * Math.pow(key, 0.85) + 0.22 * fill) + spec + 0.12 * rim;
-      const pct = Math.max(0, Math.min(100, lum * 100));
+      // Gradiente radial discreto simulando fonte de luz superior-esquerda (-0.42, +0.48)
+      const cxCam = cs.reduce((acc, p) => acc + p.x, 0) / (cs.length * span);
+      const cyCam = cs.reduce((acc, p) => acc + p.y, 0) / (cs.length * span);
+      const distTopLeft = Math.hypot(cxCam + 0.42, cyCam - 0.48);
+      const radialBoost = Math.max(0, 1 - distTopLeft * 0.68) * 0.16;
+      // difuso + preenchimento + reflexo especular discreto + luz radial superior-esquerda
+      const spec = Math.pow(key, 14) * 0.22;
+      const lum =
+        m.amb +
+        m.gain * (0.8 * Math.pow(key, 0.85) + 0.24 * fill) +
+        spec +
+        0.1 * rim +
+        radialBoost;
+      const pct = Math.max(4, Math.min(96, lum * 100));
       const paint = `color-mix(in oklab, ${m.hi} ${pct.toFixed(1)}%, ${m.base})`;
-      // desempate por GRUPO de casca: em corpos que se cruzam (tubo × ramal),
-      // o ramal é sempre o corpo externo na junção — vence empates de
-      // profundidade sem mover nenhum vértice.
       const bias = ((BIAS[face.kind] ?? 0) + (face.g ?? 0) * 0.75) * span * 0.002;
 
-      // Triangulação determinística em leque, apenas na representação: nenhum
-      // ponto é movido. A PROFUNDIDADE continua sendo a da face inteira, para
-      // que os triângulos de um mesmo polígono nunca se intercalem com os de
-      // polígonos vizinhos (origem de listras e do efeito fantasma).
       const depths = cs.map((point) => point.z + bias);
       const minDepth = Math.min(...depths);
       const maxDepth = Math.max(...depths);
       const centerDepth = depths.reduce((acc, depth) => acc + depth, 0) / depths.length;
       const a = cs[0]!;
-      const passIndex = face.kind === "inner" ? 0 : face.kind === "cap" ? 1 : face.kind === "outer" ? 2 : 3;
+      // Rim compartilha o passe 2 com outer (com leve bias positivo para vencer empates locais na borda)
+      // para que a borda da base traseira nunca seja desenhada por cima da parede frontal.
+      const passIndex = face.kind === "inner" ? 0 : face.kind === "cap" ? 1 : 2;
 
       for (let i = 1; i + 1 < cs.length; i++) {
         const b = cs[i]!;
         const c = cs[i + 1]!;
-        const pA = { x: a.x * kk + panX, y: -a.y * kk + panY, z: a.z + bias };
-        const pB = { x: b.x * kk + panX, y: -b.y * kk + panY, z: b.z + bias };
-        const pC = { x: c.x * kk + panX, y: -c.y * kk + panY, z: c.z + bias };
+        const pA = { x: a.x * kk + panX, y: -a.y * kk + panY, z: a.z };
+        const pB = { x: b.x * kk + panX, y: -b.y * kk + panY, z: b.z };
+        const pC = { x: c.x * kk + panX, y: -c.y * kk + panY, z: c.z };
         const xs = [pA.x, pB.x, pC.x];
         const ys = [pA.y, pB.y, pC.y];
         f.push({
@@ -263,7 +282,7 @@ export function Wire3D({
     // ordenação estável: empates resolvidos pelo índice, sem cintilação
     f.sort(compareSurfaceDepth);
 
-    // 1. Filtragem global por modo de visualização 3D (Seções 4, 5, 6, 7):
+    // 1. Filtragem global por modo de visualização 3D:
     // SOMB: 0 arestas (superfície contínua limpa)
     // SOMB+AR: somente arestas reais/tecnicamente significativas (sem triangulação interna)
     // ARAME: estrutura completa, incluindo malha matemática
@@ -274,8 +293,7 @@ export function Wire3D({
       edgeMode,
     );
 
-    // 2. Deduplicação na camada de apresentação (Seção 14):
-    // Elimina arestas duplicadas, coincidentes ou sobrepostas geradas por faces adjacentes
+    // 2. Deduplicação na camada de apresentação:
     const deduped = deduplicateEdges(
       filtered.edges,
       filtered.kinds,
@@ -284,17 +302,17 @@ export function Wire3D({
       span * 1e-4,
     );
 
-    // 3. Oclusão de profundidade e projeção (Seção 16):
+    // 3. Oclusão de profundidade e projeção:
     // No modo SOMB+AR, a superfície frontal metálica oclui arestas traseiras (elimina linhas flutuantes)
     const effectiveVisibility =
       lineVisibility ?? (edgeMode === "shaded-edges" ? "real-occlusion" : "technical-persistent");
 
-    // Apenas faces externas e de borda atuam como oclusores para as linhas
+    // Apenas faces externas atuam como oclusores para as linhas (sem auto-oclusão das bordas rim)
     const occluders = f.filter(
-      (tri) => (tri.pass === 2 || tri.pass === 3) && tri.pts[0] && tri.pts[1] && tri.pts[2],
+      (tri) => tri.kind === "outer" && tri.pts[0] && tri.pts[1] && tri.pts[2],
     );
 
-    const depthEpsilon = span * 1e-4;
+    const depthEpsilon = span * 3.5e-3;
     const e = deduped.edges.flatMap((edge, index) => {
       const origIndex = deduped.originalIndices[index] ?? index;
       return visibleLineSegments(
@@ -322,11 +340,6 @@ export function Wire3D({
 
   const maxDepth = Math.max(1, ...edges.flatMap((e) => [Math.abs(e.z1), Math.abs(e.z2)]));
 
-  /*
-   * Destaque de seleção: entidades cuja origem canônica é `highlightRef`.
-   * Camada "selection" — acima de superfícies e arestas, nunca substitui as
-   * cores técnicas nem depende apenas de cor (rótulo textual acompanha).
-   */
   const highlightRefs = useMemo<readonly GeometryRef[]>(
     () => (highlightRef == null ? [] : Array.isArray(highlightRef) ? highlightRef : [highlightRef]),
     [highlightRef],
@@ -359,13 +372,40 @@ export function Wire3D({
       }
     : selectedFaces[0]?.pts && selectedFaces[0].pts.length >= 3
       ? {
-        x: ((selectedFaces[0].pts[0]?.x ?? 0) + (selectedFaces[0].pts[2]?.x ?? 0)) / 2,
-        y: ((selectedFaces[0].pts[0]?.y ?? 0) + (selectedFaces[0].pts[2]?.y ?? 0)) / 2,
+          x: ((selectedFaces[0].pts[0]?.x ?? 0) + (selectedFaces[0].pts[2]?.x ?? 0)) / 2,
+          y: ((selectedFaces[0].pts[0]?.y ?? 0) + (selectedFaces[0].pts[2]?.y ?? 0)) / 2,
+        }
+      : null;
+
+  const startInertia = () => {
+    if (!interactive || dragMode.current !== "orbit") return;
+    if (inertiaRaf.current) cancelAnimationFrame(inertiaRaf.current);
+    const step = () => {
+      if (drag.current) return;
+      velocity.current.vx *= 0.92;
+      velocity.current.vy *= 0.92;
+      const speed = Math.hypot(velocity.current.vx, velocity.current.vy);
+      if (speed < 0.0004) {
+        velocity.current = { vx: 0, vy: 0 };
+        return;
       }
-    : null;
+      setCam((c) => ({
+        ...c,
+        yaw: c.yaw + velocity.current.vx,
+        pitch: c.pitch + velocity.current.vy,
+      }));
+      resume.current = performance.now() + 600;
+      inertiaRaf.current = requestAnimationFrame(step);
+    };
+    if (Math.hypot(velocity.current.vx, velocity.current.vy) > 0.001) {
+      inertiaRaf.current = requestAnimationFrame(step);
+    }
+  };
 
   const onDragStart = (ev: React.PointerEvent<SVGSVGElement>) => {
     if (!interactive && ev.pointerType === "touch") return; // toque continua servindo ao card
+    if (inertiaRaf.current) cancelAnimationFrame(inertiaRaf.current);
+    velocity.current = { vx: 0, vy: 0 };
     const isPan = ev.button === 1 || ev.button === 2 || ev.shiftKey || ev.ctrlKey || mode === "pan";
     dragMode.current = isPan ? "pan" : "orbit";
     drag.current = { x: ev.clientX, y: ev.clientY };
@@ -440,23 +480,31 @@ export function Wire3D({
             panY: (c.panY ?? 0) + dy * factor,
           }));
         } else {
+          const vyaw = dx * 0.0085;
+          const vpitch = interactive ? dy * 0.007 : 0;
+          velocity.current = {
+            vx: velocity.current.vx * 0.35 + vyaw * 0.65,
+            vy: velocity.current.vy * 0.35 + vpitch * 0.65,
+          };
           setCam((c) => ({
             ...c,
-            yaw: c.yaw + dx * 0.008,
-            pitch: interactive
-              ? Math.max(-Math.PI / 2, Math.min(Math.PI / 2, c.pitch + dy * 0.006))
-              : c.pitch,
+            yaw: c.yaw + vyaw,
+            pitch: interactive ? c.pitch + vpitch : c.pitch,
           }));
         }
       }}
       onPointerUp={(ev) => {
         drag.current = null;
         resume.current = performance.now() + 900;
+        startInertia();
         onTapSelect(ev);
       }}
       onPointerLeave={() => {
-        drag.current = null;
-        resume.current = performance.now() + 900;
+        if (drag.current) {
+          drag.current = null;
+          resume.current = performance.now() + 900;
+          startInertia();
+        }
       }}
     >
       <g>
@@ -469,7 +517,7 @@ export function Wire3D({
               points={f.d}
               fill={f.fill}
               stroke={f.fill}
-              strokeWidth={0.3}
+              strokeWidth={0.4}
               strokeLinejoin="round"
             />
           ))}
@@ -484,8 +532,8 @@ export function Wire3D({
               x2={e.x2.toFixed(2)}
               y2={e.y2.toFixed(2)}
               stroke="var(--solid-edge)"
-              strokeWidth={0.5}
-              strokeOpacity={0.45}
+              strokeWidth={0.45}
+              strokeOpacity={0.28}
               strokeDasharray="4 3 1 3"
             />
           ))}
@@ -500,11 +548,11 @@ export function Wire3D({
               x2={e.x2.toFixed(2)}
               y2={e.y2.toFixed(2)}
               stroke="var(--solid-edge)"
-              strokeWidth={0.6}
+              strokeWidth={edgeMode === "wireframe" ? 0.65 : 0.78}
               strokeOpacity={
                 edgeMode === "wireframe"
-                  ? (0.45 + 0.45 * (((e.z1 + e.z2) / 2 + maxDepth) / (2 * maxDepth))).toFixed(3)
-                  : (0.18 + 0.42 * (((e.z1 + e.z2) / 2 + maxDepth) / (2 * maxDepth))).toFixed(3)
+                  ? (0.5 + 0.45 * (((e.z1 + e.z2) / 2 + maxDepth) / (2 * maxDepth))).toFixed(3)
+                  : (0.62 + 0.32 * (((e.z1 + e.z2) / 2 + maxDepth) / (2 * maxDepth))).toFixed(3)
               }
               strokeLinecap="round"
             />

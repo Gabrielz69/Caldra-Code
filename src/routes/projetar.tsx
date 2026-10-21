@@ -12,6 +12,7 @@ import {
   Box,
   FileCode,
   Maximize2,
+  Minimize2,
   FolderOpen,
 } from "lucide-react";
 import { PART_REGISTRY } from "@/lib/library/registry";
@@ -318,6 +319,7 @@ function ProjetarPage() {
   const [edgeMode, setEdgeMode] = useState<"shaded-edges" | "wireframe">("shaded-edges");
   const [autoRotate, setAutoRotate] = useState(true);
   const [viewNonce, setViewNonce] = useState(0);
+  const [isExpandedViewport, setIsExpandedViewport] = useState(false);
 
   // Construção reativa do modelo 3D matemático
   const wireModel = useMemo(() => {
@@ -327,6 +329,7 @@ function ProjetarPage() {
       h: activeModel.h,
       e: activeModel.e,
       seg: 48,
+      divisions: 6,
       t: 6,
     });
   }, [activeModel]);
@@ -388,7 +391,7 @@ function ProjetarPage() {
                     {activeModel.norma}
                   </span>
                 </div>
-                <h2 className="font-display text-sm font-bold text-zinc-100 truncate">
+                <h2 className="font-display text-sm font-bold text-foreground dark:text-zinc-100 truncate">
                   {activeModel.title}
                 </h2>
               </div>
@@ -412,16 +415,31 @@ function ProjetarPage() {
             </div>
           </div>
 
-          {/* Viewport 3D Principal Interativa (altura compacta adaptada: 170px) */}
-          <div className="relative h-42 sm:h-46 w-full rounded-xl border border-zinc-800/90 bg-gradient-to-b from-[#090B0F] to-[#060709] overflow-hidden">
+          {/* Viewport 3D Principal Interativa */}
+          <div
+            className={cn(
+              "relative w-full rounded-xl border border-zinc-800/90 bg-gradient-to-b from-[#090B0F] to-[#050608] overflow-hidden transition-all",
+              isExpandedViewport
+                ? "fixed inset-3 z-50 h-[calc(100vh-1.5rem)] w-[calc(100vw-1.5rem)] rounded-2xl border-zinc-700/90 shadow-2xl"
+                : "h-44 sm:h-48",
+            )}
+          >
             {/* Grid blueprint CAD de fundo */}
             <div
-              className="absolute inset-0 pointer-events-none opacity-20"
+              className="absolute inset-0 pointer-events-none opacity-25"
               style={{
                 backgroundImage:
                   "radial-gradient(#38bdf8 0.75px, transparent 0.75px), radial-gradient(#f59e0b 0.5px, transparent 0.5px)",
                 backgroundSize: "20px 20px, 40px 40px",
                 backgroundPosition: "0 0, 10px 10px",
+              }}
+            />
+            {/* Iluminação direcional radial superior-esquerda */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle at 26% 22%, rgba(148, 163, 184, 0.14) 0%, rgba(15, 23, 42, 0.04) 48%, transparent 75%)",
               }}
             />
 
@@ -434,35 +452,38 @@ function ProjetarPage() {
                 autoSpin={autoRotate}
                 edgeMode={edgeMode}
                 viewNonce={viewNonce}
-                showRefLines={true}
+                showRefLines={false}
               />
             </div>
 
             {/* Cotas técnicas em tempo real */}
-            <div className="pointer-events-none absolute top-2 left-2.5 flex flex-col gap-0.5">
+            <div className="pointer-events-none absolute top-2.5 left-3 flex flex-col gap-0.5">
               <span className="font-mono text-[8px] font-semibold text-zinc-400 tracking-wider">
-                GEOMETRIA PARAMÉTRICA
+                GEOMETRIA PARAMÉTRICA • 360°
               </span>
               <span className="font-mono text-[9px] font-bold text-amber-400">
                 D1={activeModel.d1} • D2={activeModel.d2} • H={activeModel.h} mm
               </span>
             </div>
 
-            {/* Controles de visualização da viewport */}
-            <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-zinc-950/80 backdrop-blur-md border border-zinc-800/90 rounded-lg p-0.5 shadow-lg">
+            {/* Barra de Ferramentas Flutuante (Bottom-Right do Visor: 3 botões circulares escuros com ícones dourados/brancos) */}
+            <div
+              className="absolute bottom-2.5 right-2.5 z-20 flex items-center gap-1.5"
+              role="group"
+              aria-label="Controles flutuantes do visor 3D"
+            >
               <button
                 type="button"
                 onClick={() => {
                   triggerHaptic("tap");
-                  setAutoRotate((v) => !v);
+                  setViewNonce((n) => n + 1);
+                  setAutoRotate(true);
                 }}
-                className={cn(
-                  "p-1 rounded text-[9px] font-mono transition-all cursor-pointer",
-                  autoRotate ? "text-amber-400 bg-amber-500/20" : "text-zinc-400 hover:text-zinc-200",
-                )}
-                title="Girar automaticamente"
+                className="flex size-8 items-center justify-center rounded-full border border-zinc-700/80 bg-zinc-900/90 text-amber-400 shadow-lg backdrop-blur-md transition-all hover:border-amber-500/50 hover:bg-zinc-800 active:scale-95 cursor-pointer"
+                title="Resetar Rotação / Vista Padrão"
+                aria-label="Resetar Rotação / Vista Padrão"
               >
-                <RotateCcw className="size-3" />
+                <RotateCcw className="size-3.5" />
               </button>
               <button
                 type="button"
@@ -471,25 +492,36 @@ function ProjetarPage() {
                   setEdgeMode((m) => (m === "shaded-edges" ? "wireframe" : "shaded-edges"));
                 }}
                 className={cn(
-                  "p-1 rounded text-[9px] font-mono transition-all cursor-pointer",
-                  edgeMode === "wireframe"
-                    ? "text-sky-400 bg-sky-500/20"
-                    : "text-zinc-400 hover:text-zinc-200",
+                  "flex size-8 items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer",
+                  edgeMode === "shaded-edges"
+                    ? "border-amber-500/50 bg-zinc-900/90 text-amber-400 hover:bg-zinc-800"
+                    : "border-zinc-700/80 bg-zinc-900/90 text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800",
                 )}
-                title="Alternar Sombreamento / Arame"
+                title="Alternar Modo de Camadas / Wireframe vs. Sólido"
+                aria-label="Alternar Modo de Camadas / Wireframe vs. Sólido"
               >
-                <Layers className="size-3" />
+                <Layers className="size-3.5" />
               </button>
               <button
                 type="button"
                 onClick={() => {
                   triggerHaptic("selection");
-                  setViewNonce((n) => n + 1);
+                  setIsExpandedViewport((v) => !v);
                 }}
-                className="p-1 rounded text-zinc-400 hover:text-zinc-200 transition-all cursor-pointer"
-                title="Resetar câmera"
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full border shadow-lg backdrop-blur-md transition-all active:scale-95 cursor-pointer",
+                  isExpandedViewport
+                    ? "border-amber-500/50 bg-zinc-900/90 text-amber-400 hover:bg-zinc-800"
+                    : "border-zinc-700/80 bg-zinc-900/90 text-zinc-100 hover:border-zinc-600 hover:bg-zinc-800",
+                )}
+                title={isExpandedViewport ? "Recolher Tela Cheia" : "Tela Cheia / Expandir"}
+                aria-label={isExpandedViewport ? "Recolher Tela Cheia" : "Tela Cheia / Expandir"}
               >
-                <Maximize2 className="size-3" />
+                {isExpandedViewport ? (
+                  <Minimize2 className="size-3.5" />
+                ) : (
+                  <Maximize2 className="size-3.5" />
+                )}
               </button>
             </div>
           </div>

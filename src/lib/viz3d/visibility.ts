@@ -117,9 +117,9 @@ export function compareSurfaceDepth(a: ProjectedTriangle, b: ProjectedTriangle):
   if (b.maxDepth < a.minDepth - eps) return 1;
 
   return (
-    a.minDepth - b.minDepth ||
-    a.maxDepth - b.maxDepth ||
     a.centerDepth - b.centerDepth ||
+    a.maxDepth - b.maxDepth ||
+    a.minDepth - b.minDepth ||
     a.priority - b.priority ||
     a.id.localeCompare(b.id)
   );

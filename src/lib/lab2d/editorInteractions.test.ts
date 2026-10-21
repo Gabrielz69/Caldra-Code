@@ -4,6 +4,7 @@ import {
   copySelection,
   finishPolylinePoints,
   pasteClipboard,
+  projectOrthoSegment,
   removeEntityOnly,
   shouldClosePolyline,
 } from "./editorInteractions";
@@ -55,5 +56,23 @@ describe("interações do editor CHAMFER", () => {
     expect(result.entities.map((e) => e.id)).toEqual(["a", "c"]);
     expect(result.entities.every((e) => e.group === "g1")).toBe(true);
     expect(result.groups).toHaveLength(1);
+  });
+
+  it("trava os segmentos da polilinha no modo ORTO escolhendo o eixo dominante (horizontal ou vertical)", () => {
+    const origin = { x: 50, y: 50 };
+
+    // Movimento predominantemente horizontal (dx > dy): y deve ser travado no y anterior (50)
+    const horizRight = projectOrthoSegment(origin, { x: 120, y: 65 });
+    expect(horizRight).toEqual({ x: 120, y: 50 });
+
+    const horizLeft = projectOrthoSegment(origin, { x: 10, y: 40 });
+    expect(horizLeft).toEqual({ x: 10, y: 50 });
+
+    // Movimento predominantemente vertical (dy >= dx): x deve ser travado no x anterior (50)
+    const vertUp = projectOrthoSegment(origin, { x: 62, y: 150 });
+    expect(vertUp).toEqual({ x: 50, y: 150 });
+
+    const vertDown = projectOrthoSegment(origin, { x: 45, y: -20 });
+    expect(vertDown).toEqual({ x: 50, y: -20 });
   });
 });

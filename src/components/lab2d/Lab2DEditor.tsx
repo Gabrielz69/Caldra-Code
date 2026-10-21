@@ -179,6 +179,7 @@ import {
   copySelection,
   finishPolylinePoints,
   pasteClipboard,
+  projectOrthoSegment,
   removeEntityOnly,
   shouldClosePolyline,
   type ChamferClipboard,
@@ -270,7 +271,7 @@ import { ChamferTechnicalSheetModal } from "./ChamferTechnicalSheetModal";
 import { CaldraIntegratedWorkshopModal } from "./CaldraIntegratedWorkshopModal";
 import { GeometricReferenceEngine, type EdgeReference } from "@/lib/lab2d/cadGeometricReferences";
 import { CoordinateFrameManager, type TemporaryOrigin } from "@/lib/lab2d/cadCoordinateFrames";
-import { DynamicDimensionInteraction, type LiveDimension } from "@/lib/lab2d/cadDynamicDimensions";
+import { DynamicDimensionInteraction, DimensionInteractionEngine, type LiveDimension } from "@/lib/lab2d/cadDynamicDimensions";
 import { GeometricConstraintResolver } from "@/lib/lab2d/cadConstraintResolver";
 import { ChamferLiveDimensionsOverlay } from "./ChamferLiveDimensionsOverlay";
 import {
@@ -796,16 +797,35 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
   const [loupeVisible, setLoupeVisible] = useState(false);
   const [loupeScreenPos, setLoupeScreenPos] = useState<Vec2>({ x: 0, y: 0 });
   const [loupeCadPos, setLoupeCadPos] = useState<Vec2>({ x: 0, y: 0 });
+  const [loupePinned, setLoupePinned] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("chamfer_loupe_pinned") === "true";
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  const toggleLoupePinned = useCallback(() => {
+    setLoupePinned((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("chamfer_loupe_pinned", String(next));
+      } catch {
+        // ignore localStorage errors in sandboxed environments
+      }
+      toast.info(next ? "Lupa Fixada no canto (Modo Fixo)" : "Lupa Flutuante (Acompanha o dedo)");
+      return next;
+    });
+  }, []);
+
+  const lastEntityTapRef = useRef<{ id: string; time: number } | null>(null);
 
   /* ÁREA DE TRANSFERÊNCIA GLOBAL DO CAD (SEÇÃO 17) */
   const [clipboardModalOpen, setClipboardModalOpen] = useState(false);
   const [clipboardAnchorWorld, setClipboardAnchorWorld] = useState<Vec2 | null>(null);
-  const emptyCanvasLongPressRef = useRef<{
-    timer: ReturnType<typeof setTimeout>;
-    x: number;
-    y: number;
-    world: Vec2;
-  } | null>(null);
 
   /* PASSAPORTE DE FABRICAÇÃO (SEÇÕES 34 & 35) */
   const [fabricationPassportOpen, setFabricationPassportOpen] = useState(false);
@@ -2477,7 +2497,8 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
       r: 5,
     };
     commit((e) => [...e, hole]);
-    setSelection([hole.id]);
+    setSelection([]);
+    setMobileEditorOpenManual(false);
     toast.success("Furo paramétrico Ø10mm adicionado.");
   }, [boxOfEntities, selected, cursor.x, cursor.y, commit]);
 
@@ -2593,7 +2614,8 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
           ...p,
           { id: polyId, layer: activeLayer, type: "polyline", pts: points, closed: close },
         ]);
-        setSelection([polyId]);
+        setSelection([]);
+        setMobileEditorOpenManual(false);
       }
       setPending([]);
       setDraft(null);
@@ -2710,8 +2732,7 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
       tool === "move" ||
       tool === "leader" ||
       dragNode !== null ||
-      dragEntityRef.current !== null ||
-      tool === "select"
+      dragEntityRef.current !== null
     );
 
     if (ptrsRef.current.size === 1 && tool !== "pan" && isDrawingOrEditingTool) {
@@ -2720,7 +2741,7 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
       setLoupeCadPos(p);
     }
 
-    if (ev.pointerType === "touch") {
+    if (ev.pointerType === "touch" && isDrawingOrEditingTool) {
       setLoupeScreenPos({ x: ev.clientX, y: ev.clientY });
       setLoupeCadPos(p);
     }
@@ -2748,9 +2769,9 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
     }
 
     if (tool === "select" || tool === "node") {
-      // Se clicou sobre um dos nós da seleção ativa (grip node), inicia edição direta do vértice
+      // 1. Teste de nós de vértice em entidades selecionadas (grip nodes)
+      let bestNode: { id: string; index: number; dist: number } | null = null;
       if (selection.length > 0) {
-        let bestNode: { id: string; index: number; dist: number } | null = null;
         const bd = 10 / view.k;
         for (const selEnt of selected) {
           const pts = entityPoints(selEnt);
@@ -2761,154 +2782,160 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
             }
           });
         }
+      }
+
+      // 2. Teste de colisão com formas geométricas existentes
+      const hit = hitTest(raw);
+      const targetEntity = hit;
+
+      // =========================================================================
+      // MÁQUINA DE ESTADOS BASEADA NO ALVO DO TOQUE (HIT-TEST CONTEXT)
+      // =========================================================================
+
+      // CASO A: O toque começou em cima de uma Forma Geométrica ou Peça Existente (targetEntity != null || bestNode != null)
+      if (targetEntity || bestNode) {
+        // Se clicou sobre um grip node existente, inicia edição do vértice
         if (bestNode) {
           setDragNode({ id: bestNode.id, index: bestNode.index });
           return;
         }
-      }
 
-      const hit = hitTest(raw);
-      if (hit) {
-        // clique num membro seleciona o GRUPO inteiro; Ctrl/⌘ isola o membro
-        const solo = ev.ctrlKey || ev.metaKey;
-        const target = solo ? [hit.id] : expandSelection(entities, [hit.id]);
-        const nextSel = ev.shiftKey
-          ? selection.includes(hit.id)
-            ? selection.filter((i) => !target.includes(i))
-            : [...new Set([...selection, ...target])]
-          : selection.includes(hit.id)
-            ? selection
-            : target;
-        setSelection(nextSel);
-        if (tool === "select") {
-          const inCooldown = performance.now() < Math.max(gestureUntilRef.current, dragCooldownUntilRef.current);
-          if (!inCooldown && ptrsRef.current.size === 1) {
-            const canvasRect = (canvasViewportRef.current ?? svgRef.current)?.getBoundingClientRect();
-            const v = viewRef.current;
-            const zoom = v && Number.isFinite(v.k) && v.k > 0 ? v.k : 1;
-            const panX = v && Number.isFinite(v.tx) ? v.tx : 0;
-            const panY = v && Number.isFinite(v.ty) ? v.ty : 0;
-            const left = canvasRect?.left ?? 0;
-            const top = canvasRect?.top ?? 0;
+        // Prioridade para o Long-Press de Arraste (320ms) / Seleção / Referência:
+        // O tempo de pressão serve exclusivamente para destravar o movimento da peça ou acionar menus contextuais específicos da geometria.
+        if (hit) {
+          const solo = ev.ctrlKey || ev.metaKey;
+          const target = solo ? [hit.id] : expandSelection(entities, [hit.id]);
+          const nextSel = ev.shiftKey
+            ? selection.includes(hit.id)
+              ? selection.filter((i) => !target.includes(i))
+              : [...new Set([...selection, ...target])]
+            : selection.includes(hit.id)
+              ? selection
+              : target;
+          setSelection(nextSel);
 
-            const startWorldX = (ev.clientX - left - panX) / zoom;
-            const startWorldY = (ev.clientY - top - panY) / zoom;
+          // Duplo clique / duplo toque intencional para abrir janela de propriedades da entidade (Regra 3.2)
+          const now = performance.now();
+          if (lastEntityTapRef.current && lastEntityTapRef.current.id === hit.id && now - lastEntityTapRef.current.time < 380) {
+            setMobileEditorOpenManual(true);
+            setRightSidebarOpen(true);
+            setActiveSidebarTab("propriedades");
+            triggerHaptic("action");
+            lastEntityTapRef.current = null;
+          } else {
+            lastEntityTapRef.current = { id: hit.id, time: now };
+          }
 
-            // Snapshot Imutável de todas as entidades
-            const initialEntitiesSnapshot: Entity[] = entities.map((e) => {
-              if (e.type === "polyline") {
-                return { ...e, pts: e.pts.map((pt) => ({ ...pt })) };
+          if (tool === "select") {
+            const inCooldown = performance.now() < Math.max(gestureUntilRef.current, dragCooldownUntilRef.current);
+            if (!inCooldown && ptrsRef.current.size === 1) {
+              const canvasRect = (canvasViewportRef.current ?? svgRef.current)?.getBoundingClientRect();
+              const v = viewRef.current;
+              const zoom = v && Number.isFinite(v.k) && v.k > 0 ? v.k : 1;
+              const panX = v && Number.isFinite(v.tx) ? v.tx : 0;
+              const panY = v && Number.isFinite(v.ty) ? v.ty : 0;
+              const left = canvasRect?.left ?? 0;
+              const top = canvasRect?.top ?? 0;
+
+              const startWorldX = (ev.clientX - left - panX) / zoom;
+              const startWorldY = (ev.clientY - top - panY) / zoom;
+
+              // Snapshot Imutável de todas as entidades
+              const initialEntitiesSnapshot: Entity[] = entities.map((e) => {
+                if (e.type === "polyline") {
+                  return { ...e, pts: e.pts.map((pt) => ({ ...pt })) };
+                }
+                return { ...e };
+              });
+
+              // REGRA 1.1: BLOQUEIO DE MOVIMENTO IMEDIATO (Exigir Segurar por 320ms)
+              // Uma peça NUNCA deve começar a se mover no instante do toque!
+              if (dragLongPressRef.current) {
+                clearTimeout(dragLongPressRef.current.timer);
+                dragLongPressRef.current = null;
               }
-              return { ...e };
-            });
+              if (dragEntityRef.current) {
+                dragEntityRef.current = null;
+                isDraggingEntityRef.current = false;
+              }
+              setIsDraggingUnlocked(false);
 
-            // REGRA 1.1: BLOQUEIO DE MOVIMENTO IMEDIATO (Exigir Segurar por 320ms)
-            // Uma peça NUNCA deve começar a se mover no instante do toque!
-            if (dragLongPressRef.current) {
-              clearTimeout(dragLongPressRef.current.timer);
-              dragLongPressRef.current = null;
-            }
-            if (dragEntityRef.current) {
-              dragEntityRef.current = null;
-              isDraggingEntityRef.current = false;
-            }
-            setIsDraggingUnlocked(false);
+              const clientX = ev.clientX;
+              const clientY = ev.clientY;
+              const pointerId = ev.pointerId;
 
-            const clientX = ev.clientX;
-            const clientY = ev.clientY;
-            const pointerId = ev.pointerId;
+              const timer = setTimeout(() => {
+                if (ptrsRef.current.size !== 1) return;
+                if (performance.now() < dragCooldownUntilRef.current) return;
 
-            const timer = setTimeout(() => {
-              if (ptrsRef.current.size !== 1) return;
-              if (performance.now() < dragCooldownUntilRef.current) return;
+                // Destrava movimento da peça após 320ms parado
+                setIsDraggingUnlocked(true);
+                isDraggingEntityRef.current = true;
+                dragEntityRef.current = {
+                  pointerId,
+                  startClient: { x: clientX, y: clientY },
+                  startWorld: { x: startWorldX, y: startWorldY },
+                  ids: nextSel,
+                  initialEntitiesSnapshot,
+                  moved: false,
+                  effectiveDelta: { x: 0, y: 0 },
+                  unlocked: true,
+                };
 
-              // Destrava movimento da peça após 320ms parado
-              setIsDraggingUnlocked(true);
-              isDraggingEntityRef.current = true;
-              dragEntityRef.current = {
+                // Feedback ao destravar: vibração curta (15ms) + ativação da Bolha Quadrada de Zoom
+                if (typeof navigator !== "undefined" && navigator.vibrate) {
+                  try {
+                    navigator.vibrate(15);
+                  } catch {
+                    // ignorar se vibração não suportada
+                  }
+                }
+                triggerHaptic("action");
+                AudioManager.play("ui_select");
+
+                setLoupeVisible(true);
+                setLoupeScreenPos({ x: clientX, y: clientY });
+                setLoupeCadPos({ x: startWorldX, y: startWorldY });
+
+                if (longPressRef.current) {
+                  clearTimeout(longPressRef.current.timer);
+                  longPressRef.current = null;
+                }
+              }, 320);
+
+              dragLongPressRef.current = {
+                timer,
                 pointerId,
                 startClient: { x: clientX, y: clientY },
                 startWorld: { x: startWorldX, y: startWorldY },
                 ids: nextSel,
                 initialEntitiesSnapshot,
-                moved: false,
-                effectiveDelta: { x: 0, y: 0 },
-                unlocked: true,
               };
-
-              // Feedback ao destravar: vibração curta (15ms) + ativação da Bolha Quadrada de Zoom
-              if (typeof navigator !== "undefined" && navigator.vibrate) {
-                try {
-                  navigator.vibrate(15);
-                } catch {
-                  // ignorar se vibração não suportada
-                }
-              }
-              triggerHaptic("action");
-              AudioManager.play("ui_select");
-
-              setLoupeVisible(true);
-              setLoupeScreenPos({ x: clientX, y: clientY });
-              setLoupeCadPos({ x: startWorldX, y: startWorldY });
-
-              // Cancela menu radial se estava aguardando
-              if (longPressRef.current) {
-                clearTimeout(longPressRef.current.timer);
-                longPressRef.current = null;
-              }
-            }, 320);
-
-            dragLongPressRef.current = {
-              timer,
-              pointerId,
-              startClient: { x: clientX, y: clientY },
-              startWorld: { x: startWorldX, y: startWorldY },
-              ids: nextSel,
-              initialEntitiesSnapshot,
-            };
+            }
           }
-        }
-        if (emptyCanvasLongPressRef.current) {
-          clearTimeout(emptyCanvasLongPressRef.current.timer);
-          emptyCanvasLongPressRef.current = null;
         }
         return;
       }
 
-      if (emptyCanvasLongPressRef.current) {
-        clearTimeout(emptyCanvasLongPressRef.current.timer);
-        emptyCanvasLongPressRef.current = null;
+      // =========================================================================
+      // CASO B: O toque começou em um Espaço Vazio do Canvas (targetEntity == null)
+      // =========================================================================
+
+      // 1. Desativar Arraste e Referência de Peça:
+      // Como não há nenhuma entidade embaixo do dedo, ignore interações de mover formas ou capturar pontos de referência da peça.
+      if (dragLongPressRef.current) {
+        clearTimeout(dragLongPressRef.current.timer);
+        dragLongPressRef.current = null;
       }
+      if (dragEntityRef.current) {
+        dragEntityRef.current = null;
+        isDraggingEntityRef.current = false;
+      }
+      setIsDraggingUnlocked(false);
+
       if (!ev.shiftKey) setSelection([]);
 
-      // TOQUE LONGO NO ESPAÇO VAZIO (400ms): Abre a Área de Transferência do CAD
-      const clientX = ev.clientX;
-      const clientY = ev.clientY;
-      const anchorPos = { x: p.x, y: p.y };
-      const emptyTimer = setTimeout(() => {
-        if (ptrsRef.current.size !== 1) return;
-        triggerHaptic("medium");
-        if (typeof navigator !== "undefined" && navigator.vibrate) {
-          try {
-            navigator.vibrate(20);
-          } catch {
-            // ignorar se vibração não suportada
-          }
-        }
-        setMarquee(null);
-        setLoupeVisible(false);
-        setClipboardAnchorWorld(anchorPos);
-        setClipboardModalOpen(true);
-        emptyCanvasLongPressRef.current = null;
-      }, 400);
-
-      emptyCanvasLongPressRef.current = {
-        timer: emptyTimer,
-        x: clientX,
-        y: clientY,
-        world: anchorPos,
-      };
-
+      // Inicia retângulo de seleção por janela no vazio
       setMarquee({ a: raw, b: raw });
       return;
     }
@@ -2920,11 +2947,31 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
     }
 
     if (tool === "polyline") {
-      if (shouldClosePolyline(pending, p, 10 / view.k)) {
+      let nextPoint = p;
+      if (pending.length > 0) {
+        const lastPoint = pending[pending.length - 1]!;
+        if (drawingProjection === "isometric" && (isoOrtho || orthoOn)) {
+          nextPoint = constrainToIsoAxes(lastPoint, nextPoint, isoPlane);
+        } else if (orthoOn) {
+          nextPoint = projectOrthoSegment(lastPoint, nextPoint);
+        }
+      }
+
+      if (shouldClosePolyline(pending, nextPoint, 10 / view.k)) {
         finishPolyline(true);
         return;
       }
-      setPending((q) => [...q, p]);
+      setPending((q) => [...q, nextPoint]);
+      setDraft({
+        id: uid(),
+        layer: activeLayer,
+        type: "line",
+        x1: nextPoint.x,
+        y1: nextPoint.y,
+        x2: nextPoint.x,
+        y2: nextPoint.y,
+      });
+      triggerHaptic("tap");
       return;
     }
     if (tool === "text") {
@@ -2958,7 +3005,8 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
         const arc = arcFrom3(a, b, c, activeLayer);
         if (arc) {
           commit((e) => [...e, arc]);
-          setSelection([arc.id]);
+          setSelection([]);
+          setMobileEditorOpenManual(false);
         }
         setPending([]);
         setDraft(null);
@@ -3200,10 +3248,6 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
         clearTimeout(longPressRef.current.timer);
         longPressRef.current = null;
       }
-      if (emptyCanvasLongPressRef.current) {
-        clearTimeout(emptyCanvasLongPressRef.current.timer);
-        emptyCanvasLongPressRef.current = null;
-      }
       if (dragEntityRef.current) {
         if (dragRafRef.current) {
           cancelAnimationFrame(dragRafRef.current);
@@ -3226,14 +3270,6 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
         dragLongPressRef.current = null;
         // Gesto cancelado para movimentação da peça (tratado apenas como navegação ou marquee)
       }
-    }
-
-    if (
-      emptyCanvasLongPressRef.current &&
-      Math.hypot(ev.clientX - emptyCanvasLongPressRef.current.x, ev.clientY - emptyCanvasLongPressRef.current.y) > 8
-    ) {
-      clearTimeout(emptyCanvasLongPressRef.current.timer);
-      emptyCanvasLongPressRef.current = null;
     }
 
     if (
@@ -3527,23 +3563,22 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
       return;
     }
     if (tool === "polyline" && pending.length) {
-      let p = snapPoint(raw);
+      const lastPoint = pending[pending.length - 1]!;
+      let pt = snapPoint(raw);
       if (drawingProjection === "isometric" && (isoOrtho || orthoOn)) {
-        p = constrainToIsoAxes(pending[pending.length - 1]!, p, isoPlane);
+        pt = constrainToIsoAxes(lastPoint, pt, isoPlane);
       } else if (orthoOn) {
-        const p0 = pending[pending.length - 1]!;
-        const dx = Math.abs(raw.x - p0.x);
-        const dy = Math.abs(raw.y - p0.y);
-        p = dx >= dy ? { x: p.x, y: p0.y } : { x: p.x, y: p.y };
+        pt = projectOrthoSegment(lastPoint, pt);
       }
+      setLoupeCadPos(pt);
       setDraft({
         id: uid(),
         layer: activeLayer,
         type: "line",
-        x1: pending[pending.length - 1]!.x,
-        y1: pending[pending.length - 1]!.y,
-        x2: p.x,
-        y2: p.y,
+        x1: lastPoint.x,
+        y1: lastPoint.y,
+        x2: pt.x,
+        y2: pt.y,
       });
       return;
     }
@@ -3580,10 +3615,6 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
     if (dragLongPressRef.current) {
       clearTimeout(dragLongPressRef.current.timer);
       dragLongPressRef.current = null;
-    }
-    if (emptyCanvasLongPressRef.current) {
-      clearTimeout(emptyCanvasLongPressRef.current.timer);
-      emptyCanvasLongPressRef.current = null;
     }
     if (longPressRef.current) clearTimeout(longPressRef.current.timer);
     longPressRef.current = null;
@@ -3669,7 +3700,7 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
       setMarquee(null);
       return;
     }
-    if (draft && pending.length === 1) {
+    if (draft && pending.length === 1 && tool !== "polyline") {
       const box = boxOf(draft);
       const empty = box.maxX - box.minX < 0.01 && box.maxY - box.minY < 0.01;
       if (!empty) {
@@ -3678,7 +3709,9 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
             ? { ...draft, id: uid() }
             : draft;
         commit((e) => [...e, finalEntity]);
-        setSelection([finalEntity.id]);
+        // Desenho contínuo: tela limpa e pronta para o próximo traço (NÃO abre propriedades automaticamente)
+        setSelection([]);
+        setMobileEditorOpenManual(false);
 
         // INTEGRAÇÃO DUAL TOOL
         if (dualToolSecondary === "dim") {
@@ -3787,7 +3820,18 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
         setCenterDialogOpen(false);
         setTool("select");
       }
-      if (ev.key === "Enter" && tool === "polyline") finishPolyline(false);
+      if (tool === "polyline") {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          finishPolyline(false);
+          return;
+        }
+        if (ev.key.toLowerCase() === "c" && pending.length >= 3) {
+          ev.preventDefault();
+          finishPolyline(true);
+          return;
+        }
+      }
       if (ev.key === "F3") {
         ev.preventDefault();
         fitTo(entities);
@@ -4091,11 +4135,11 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
     return null;
   }, [selected]);
 
-  // Editor contextual móvel aberto quando 1 entidade está selecionada OU manualmente (Regra 2)
-  const mobileEditorOpen = !solidOpen && !divideEditorOpen && (
-    (selected.length === 1 && (isMobile || (typeof window !== "undefined" && window.innerWidth < 1024))) ||
-    mobileEditorOpenManual
-  );
+  // Editor contextual móvel aberto EXCLUSIVAMENTE sob solicitação explícita do usuário (Regra 3):
+  // 1. Tocar no botão de propriedades (ícone de ajustes na barra lateral / botão chapa);
+  // 2. Duplo clique / duplo toque intencional em cima de uma entidade já existente.
+  // JAMAIS abre automaticamente pós-criação de formas geométricas ou por desenho contínuo.
+  const mobileEditorOpen = !solidOpen && !divideEditorOpen && selectedEntity !== null && mobileEditorOpenManual;
 
   // Enquadramento Inteligente do CAD (Regra 7)
   useSmartFraming({
@@ -4487,7 +4531,7 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
             </div>
           </div>
 
-          {/* REGIÃO CENTRAL: CONTROLE PRINCIPAL DE MUDANÇA DE AMBIENTE [ 2D SKETCH | 3D SÓLIDO | FLANGES ] E MODO [ ORTO 2D | ISO 2D ] */}
+          {/* REGIÃO CENTRAL: CONTROLE PRINCIPAL DE MUDANÇA DE AMBIENTE [ 2D SKETCH | 3D SÓLIDO ] E MODO [ ORTO 2D | ISO 2D ] */}
           <div className="flex shrink-0 items-center justify-center gap-1.5">
             <div
               className={cn(
@@ -4531,24 +4575,6 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
                 )}
               >
                 3D SÓLIDO
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("selection");
-                  setActiveMode("flanges");
-                  setSolidOpen(true);
-                }}
-                className={cn(
-                  "rounded-md px-3 py-1 font-mono text-[10px] font-bold tracking-wider uppercase transition-colors",
-                  activeMode === "flanges"
-                    ? "bg-red-600 text-white shadow-xs"
-                    : isDark
-                      ? "text-slate-400 hover:text-slate-200"
-                      : "text-slate-600 hover:text-slate-900",
-                )}
-              >
-                FLANGES
               </button>
             </div>
 
@@ -5038,6 +5064,13 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
             onOpenPresets={() => setPresetsModalOpen(true)}
             onOpenTechnicalSheet={() => setTechnicalSheetModalOpen(true)}
             onOpenVariables={() => setVariablesModalOpen(true)}
+            onOpenClipboard={() => {
+              setClipboardAnchorWorld({
+                x: (canvasSize.w / 2 - view.tx) / view.k,
+                y: (canvasSize.h / 2 - view.ty) / view.k,
+              });
+              setClipboardModalOpen(true);
+            }}
             snapOn={snapOn}
             setSnapOn={setSnapOn}
             showGrid={showGrid}
@@ -5293,7 +5326,30 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
-            onDoubleClick={() => tool === "polyline" && finishPolyline(false)}
+            onContextMenu={(e) => e.preventDefault()}
+            onDoubleClick={(e) => {
+              if (tool === "polyline") {
+                finishPolyline(false);
+                return;
+              }
+              const v = viewRef.current;
+              const zoom = v && Number.isFinite(v.k) && v.k > 0 ? v.k : 1;
+              const panX = v && Number.isFinite(v.tx) ? v.tx : 0;
+              const panY = v && Number.isFinite(v.ty) ? v.ty : 0;
+              const canvasRect = (canvasViewportRef.current ?? svgRef.current)?.getBoundingClientRect();
+              const left = canvasRect?.left ?? 0;
+              const top = canvasRect?.top ?? 0;
+              const wx = (e.clientX - left - panX) / zoom;
+              const wy = (e.clientY - top - panY) / zoom;
+              const hit = hitTest({ x: wx, y: wy });
+              if (hit) {
+                setSelection([hit.id]);
+                setMobileEditorOpenManual(true);
+                setRightSidebarOpen(true);
+                setActiveSidebarTab("propriedades");
+                triggerHaptic("action");
+              }
+            }}
             role="application"
             aria-label="Prancheta vetorial"
           >
@@ -6733,23 +6789,65 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
               </div>
             )}
 
-            {/* HUD DE COMPRIMENTO / ÂNGULO QUANDO DESENHANDO LINHA */}
-            {pending.length === 1 && (tool === "line" || tool === "polyline") && (
+            {/* HUD DE COMPRIMENTO / ÂNGULO QUANDO DESENHANDO LINHA OU POLILINHA */}
+            {pending.length >= 1 && (tool === "line" || tool === "polyline") && (
               <div className="flex items-center gap-1.5 rounded bg-red-950/60 border border-red-500/30 px-1.5 py-0.5 text-[9.5px] text-red-300">
                 <span>
-                  L: {Math.hypot(cursor.x - pending[0]!.x, cursor.y - pending[0]!.y).toFixed(1)} mm
+                  L: {Math.hypot(
+                    cursor.x - pending[pending.length - 1]!.x,
+                    cursor.y - pending[pending.length - 1]!.y,
+                  ).toFixed(1)} mm
                 </span>
                 <span>·</span>
                 <span>
                   ∠{" "}
                   {(
-                    ((Math.atan2(-(cursor.y - pending[0]!.y), cursor.x - pending[0]!.x) * 180) /
+                    ((Math.atan2(
+                      -(cursor.y - pending[pending.length - 1]!.y),
+                      cursor.x - pending[pending.length - 1]!.x,
+                    ) * 180) /
                       Math.PI +
                       360) %
                     360
                   ).toFixed(1)}
                   °
                 </span>
+                {tool === "polyline" && (
+                  <span className="font-mono text-[9px] text-slate-400">
+                    ({pending.length} {pending.length === 1 ? "vértice" : "vértices"})
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* BOTÕES DE FINALIZAR POLILINHA DIRETO NA TELA */}
+            {tool === "polyline" && pending.length >= 2 && (
+              <div className="pointer-events-auto flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("action");
+                    finishPolyline(false);
+                  }}
+                  className="rounded bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-[9.5px] font-bold px-2 py-0.5 shadow transition-colors flex items-center gap-1"
+                  title="Concluir Polilinha aberta (Enter)"
+                >
+                  <Check className="size-3" />
+                  <span>Concluir</span>
+                </button>
+                {pending.length >= 3 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic("action");
+                      finishPolyline(true);
+                    }}
+                    className="rounded bg-sky-600 hover:bg-sky-500 text-white font-mono text-[9.5px] font-bold px-2 py-0.5 shadow transition-colors"
+                    title="Fechar Polilinha no ponto inicial (C)"
+                  >
+                    Fechar
+                  </button>
+                )}
               </div>
             )}
 
@@ -6815,6 +6913,20 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
               title="Alternar visibilidade da grade"
             >
               GRID: {showGrid ? `${grid}MM` : "OFF"}
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleLoupePinned}
+              className={cn(
+                "rounded px-1.5 py-0.5 text-[9px] uppercase font-bold transition-colors cursor-pointer",
+                loupePinned
+                  ? "text-cyan-400 bg-cyan-950/60 border border-cyan-500/40"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title={loupePinned ? "Lupa no Modo Fixo (Ancorada no canto da tela)" : "Lupa no Modo Flutuante (Acompanha o dedo)"}
+            >
+              LUPA: {loupePinned ? "FIXA" : "AUTO"}
             </button>
 
             <button
@@ -7274,6 +7386,9 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
         grid={grid}
         showGrid={showGrid}
         isDark={isDark}
+        pinned={loupePinned}
+        onTogglePinned={toggleLoupePinned}
+        rightOffset={rightSidebarOpen ? 300 : undefined}
       />
 
       {/* ÁREA DE TRANSFERÊNCIA GLOBAL DO CAD (SEÇÃO 17) */}
@@ -7358,18 +7473,44 @@ export function Lab2DEditor({ projectId }: { projectId?: string }) {
             triggerHaptic("selection");
           }}
           onConfirm={(newVal) => {
+            const result = DimensionInteractionEngine.applyDimension({
+              dim: liveDimEditor.dim,
+              newValue: newVal,
+              entities,
+              selectedIds: selection,
+              temporaryOrigin,
+              activeEdge,
+              activeEdgeSide,
+              currentCursor: cursor,
+              activeLayer,
+            });
+
+            if (result.updatedEntities && result.updatedEntities.length > 0) {
+              commit(result.updatedEntities);
+            }
+            if (result.newCursor) {
+              setCursor(result.newCursor);
+              if (pending.length > 0) {
+                const p0 = pending[0]!;
+                const completedLine: Entity = {
+                  id: uid(),
+                  layer: activeLayer,
+                  type: "line",
+                  x1: p0.x,
+                  y1: p0.y,
+                  x2: result.newCursor.x,
+                  y2: result.newCursor.y,
+                };
+                commit((prev) => [...prev.filter((e) => e.id !== completedLine.id), completedLine]);
+                setPending([]);
+                setDraft(null);
+              }
+            }
             if (liveDimEditor.dim.kind === "offset") {
               setActiveEdgeOffset(newVal);
-              toast.success(`✓ Afastamento configurado para ${newVal.toFixed(1)} mm`);
-            } else if (liveDimEditor.dim.kind === "u_along") {
-              toast.success(`✓ Posição longitudinal u configurada para ${newVal.toFixed(1)} mm`);
-            } else if (liveDimEditor.dim.kind === "dx") {
-              toast.success(`✓ Distância ΔX configurada para ${newVal.toFixed(1)} mm`);
-            } else if (liveDimEditor.dim.kind === "dy") {
-              toast.success(`✓ Distância ΔY configurada para ${newVal.toFixed(1)} mm`);
-            } else if (liveDimEditor.dim.kind === "diameter") {
-              toast.success(`✓ Diâmetro configurado para ${newVal.toFixed(1)} mm`);
             }
+            triggerHaptic("success");
+            toast.success(`✓ ${result.message}`);
             setLiveDimEditor(null);
           }}
         />

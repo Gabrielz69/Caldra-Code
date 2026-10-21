@@ -627,14 +627,14 @@
   --gradient-brand: linear-gradient(120deg, #B22222, #E53935);
 }
 
-/* ——— render sólido 3D (estilo CAD) ——— */
+/* ——— render sólido 3D (estilo CAD metálico técnico) ——— */
 :root {
   --holo: oklch(0.9 0.16 190);
-  --solid-hi: oklch(0.86 0.02 230); /* aço claro */
-  --solid-lo: oklch(0.5 0.03 240); /* aço sombreado */
-  --solid-edge: oklch(0.24 0.02 240); /* arestas */
-  --solid-in: oklch(0.32 0.02 240); /* superfície interna */
-  --solid-rim: oklch(0.95 0.01 230); /* borda / espessura */
+  --solid-hi: #8b96a6; /* aço metálico iluminado (#6B7280 -> #9CA3AF) */
+  --solid-lo: #3b4452; /* aço sombreado técnico (#374151 -> #4B5563) */
+  --solid-edge: #9ca3af; /* arestas e dobras nítidas em tom claro */
+  --solid-in: #475263; /* superfície interna sombreada */
+  --solid-rim: #cbd5e1; /* borda / espessura da chapa */
 }
 
 @utility holo-text {

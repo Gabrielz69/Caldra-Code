@@ -28,15 +28,16 @@ export function SchematicSquareToRound({
   }, [input]);
 
   const { baseA, baseB, topDiameter, height, offsetX } = input;
+  const r3 = (n: number) => Number(n.toFixed(3));
   const maxW = Math.max(baseA, topDiameter, 1);
   const scale = 150 / Math.max(maxW, height * 0.85);
-  const w = baseA * scale;
-  const wTop = topDiameter * scale;
-  const h = height * scale;
-  const ox = offsetX * scale;
+  const w = r3(baseA * scale);
+  const wTop = r3(topDiameter * scale);
+  const h = r3(height * scale);
+  const ox = r3(offsetX * scale);
   const cx = 130;
   const baseY = 190;
-  const topY = baseY - h;
+  const topY = r3(baseY - h);
 
   const on = (k: keyof SquareToRoundInput) =>
     highlight === k ? "var(--accent)" : "var(--muted-foreground)";
@@ -45,9 +46,9 @@ export function SchematicSquareToRound({
   // planta
   const pcx = 330;
   const pcy = 120;
-  const pw = (baseA * scale) / 1.15;
-  const ph = (baseB * scale) / 1.15;
-  const pr = (topDiameter * scale) / 2 / 1.15;
+  const pw = r3((baseA * scale) / 1.15);
+  const ph = r3((baseB * scale) / 1.15);
+  const pr = r3((topDiameter * scale) / 2 / 1.15);
 
   return (
     <svg
@@ -78,13 +79,13 @@ export function SchematicSquareToRound({
         {showGeneratrices && model && (
           <g data-layer="generatrices-front">
             {model.generatrices.map((g, i) => {
-              const x1 = cx + g.a.x * scale;
-              const y1 = baseY - g.a.z * scale;
-              const x2 = cx + g.b.x * scale;
-              const y2 = baseY - g.b.z * scale;
+              const x1 = Number((cx + g.a.x * scale).toFixed(3));
+              const y1 = Number((baseY - g.a.z * scale).toFixed(3));
+              const x2 = Number((cx + g.b.x * scale).toFixed(3));
+              const y2 = Number((baseY - g.b.z * scale).toFixed(3));
               const isSelected = selectedRef === foldRef(i);
-              const mx = (x1 + x2) / 2;
-              const my = (y1 + y2) / 2;
+              const mx = Number(((x1 + x2) / 2).toFixed(3));
+              const my = Number(((y1 + y2) / 2).toFixed(3));
               return (
                 <g key={`gen-f-${g.id}`}>
                   <line
@@ -253,13 +254,13 @@ export function SchematicSquareToRound({
         {showGeneratrices && model && (
           <g data-layer="generatrices-plan">
             {model.generatrices.map((g, i) => {
-              const x1 = pcx + (g.a.x * scale) / 1.15;
-              const y1 = pcy - (g.a.y * scale) / 1.15;
-              const x2 = pcx + (g.b.x * scale) / 1.15;
-              const y2 = pcy - (g.b.y * scale) / 1.15;
+              const x1 = Number((pcx + (g.a.x * scale) / 1.15).toFixed(3));
+              const y1 = Number((pcy - (g.a.y * scale) / 1.15).toFixed(3));
+              const x2 = Number((pcx + (g.b.x * scale) / 1.15).toFixed(3));
+              const y2 = Number((pcy - (g.b.y * scale) / 1.15).toFixed(3));
               const isSelected = selectedRef === foldRef(i);
-              const mx = (x1 + x2) / 2;
-              const my = (y1 + y2) / 2;
+              const mx = Number(((x1 + x2) / 2).toFixed(3));
+              const my = Number(((y1 + y2) / 2).toFixed(3));
               return (
                 <g key={`gen-p-${g.id}`}>
                   <line

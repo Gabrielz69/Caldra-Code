@@ -143,14 +143,14 @@ export function GeometryStudio({
   const [learn, setLearn] = useState(false);
   const [piece, setPiece] = useState<number | "all">("all");
   const [unfold, setUnfold] = useState(0);
-  /* 3D é camada da área de resultado, não etapa do fluxo. */
-  const [viewMode, setViewMode] = useState<VisualizationMode>("2d");
+  /* 3D é camada da área de resultado, carregada por padrão em 360° sólido sombreado. */
+  const [viewMode, setViewMode] = useState<VisualizationMode>("3d");
   /* Seleção 3D ↔ 2D (Fase F): referência canônica escolhida no modelo. */
   const [selRef, setSelRef] = useState<GeometryRef | null>(null);
   const [showGeneratrices, setShowGeneratrices] = useState(true);
-  /* Trocar de peça sempre volta para o 2D e limpa a seleção. */
+  /* Trocar de peça mantém o 3D 360° e limpa a seleção. */
   useEffect(() => {
-    setViewMode("2d");
+    setViewMode("3d");
     setSelRef(null);
   }, [slug]);
   const [pulse, setPulse] = useState<string | null>(null);

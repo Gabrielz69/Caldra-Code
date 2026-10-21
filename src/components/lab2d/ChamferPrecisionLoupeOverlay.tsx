@@ -10,7 +10,7 @@
  *  - Indicador geométrico de snap com destaque magnético e badges numéricos (X, Y, L, ∠).
  */
 
-import React, { useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import type { Vec2 } from "@/lib/geometry/types";
 import type { Entity, Snap } from "@/lib/lab2d/core";
 import type { SmartReferencePoint } from "@/lib/lab2d/cadReferenceSnaps";
@@ -19,7 +19,9 @@ import type { EdgeReference } from "@/lib/lab2d/cadGeometricReferences";
 import { CoordinateFrameManager } from "@/lib/lab2d/cadCoordinateFrames";
 import type { IsoPlane } from "@/lib/lab2d/isometricEngine";
 import { techStyle } from "@/lib/lab2d/technical";
-import { Magnet, Crosshair } from "lucide-react";
+import { Magnet, Crosshair, Pin, PinOff } from "lucide-react";
+import { triggerHaptic } from "@/lib/ui/haptics";
+import { cn } from "@/lib/utils";
 
 export interface ChamferPrecisionLoupeOverlayProps {
   visible: boolean;
@@ -38,6 +40,9 @@ export interface ChamferPrecisionLoupeOverlayProps {
   grid?: number;
   showGrid?: boolean;
   isDark?: boolean;
+  pinned?: boolean;
+  onTogglePinned?: () => void;
+  rightOffset?: number;
 }
 
 const LOUPE_SIZE = 130;
@@ -60,8 +65,42 @@ export function ChamferPrecisionLoupeOverlay({
   grid = 10,
   showGrid = true,
   isDark = true,
+  pinned,
+  onTogglePinned,
+  rightOffset,
 }: ChamferPrecisionLoupeOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Estado de fixação (ancoragem no canto da tela vs acompanhamento do dedo)
+  const [internalPinned, setInternalPinned] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("chamfer_loupe_pinned") === "true";
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  const isPinned = pinned !== undefined ? pinned : internalPinned;
+
+  const handleTogglePinned = () => {
+    triggerHaptic("selection");
+    if (onTogglePinned) {
+      onTogglePinned();
+    } else {
+      setInternalPinned((prev) => {
+        const next = !prev;
+        try {
+          localStorage.setItem("chamfer_loupe_pinned", String(next));
+        } catch {
+          // ignore localStorage errors in sandboxed environments
+        }
+        return next;
+      });
+    }
+  };
 
   // Determina o ponto-alvo no espaço do mundo: se houver snap ativo, mira no snap
   const targetWorld: Vec2 = useMemo(() => {
@@ -93,16 +132,22 @@ export function ChamferPrecisionLoupeOverlay({
   const winW = typeof window !== "undefined" ? window.innerWidth : 800;
   const winH = typeof window !== "undefined" ? window.innerHeight : 600;
 
-  // Garante que a bolha nunca saia das bordas da tela
+  // Garante que a bolha nunca saia das bordas da tela no modo flutuante
   const loupeCenterX = Math.max(HALF_SIZE + 10, Math.min(winW - HALF_SIZE - 10, screenPos?.x ?? HALF_SIZE + 10));
   const loupeCenterY = Math.max(HALF_SIZE + 10, Math.min(winH - HALF_SIZE - 10, (screenPos?.y ?? 150) + offsetY));
 
-  const boxLeft = loupeCenterX - HALF_SIZE;
-  const boxTop = loupeCenterY - HALF_SIZE;
+  // Posição ancorada (Modo Fixo): canto superior direito, visível e fora dos menus
+  const defaultRightOffset = winW >= 1024 ? 48 : 16;
+  const effectiveRightOffset = rightOffset !== undefined ? rightOffset : defaultRightOffset;
+  const fixedX = Math.max(16, winW - LOUPE_SIZE - effectiveRightOffset);
+  const fixedY = 56;
+
+  const boxLeft = isPinned ? fixedX : loupeCenterX - HALF_SIZE;
+  const boxTop = isPinned ? fixedY : loupeCenterY - HALF_SIZE;
 
   // Renderização em Canvas 2D da região ampliada
   useEffect(() => {
-    if (!visible) return;
+    if (!visible && !isPinned) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -496,7 +541,8 @@ export function ChamferPrecisionLoupeOverlay({
     ctx.restore();
   }, [
     visible,
-    targetWorld,
+    targetWorld.x,
+    targetWorld.y,
     cameraZoom,
     drawingProjection,
     isoPlane,
@@ -506,9 +552,13 @@ export function ChamferPrecisionLoupeOverlay({
     grid,
     showGrid,
     activeSnap,
+    isPinned,
   ]);
 
-  if (!visible || !screenPos || !Number.isFinite(screenPos.x) || !Number.isFinite(screenPos.y)) {
+  if (!visible && !isPinned) {
+    return null;
+  }
+  if (!isPinned && (!screenPos || !Number.isFinite(screenPos.x) || !Number.isFinite(screenPos.y))) {
     return null;
   }
 
@@ -529,8 +579,8 @@ export function ChamferPrecisionLoupeOverlay({
         width: `${LOUPE_SIZE}px`,
       }}
     >
-      {/* BADGE DE CABEÇALHO (INDICADOR DE SNAP OU PRECISÃO 3X) */}
-      <div className="mb-1.5 flex items-center justify-between px-2 py-0.5 rounded-md bg-[#0B1017]/95 border border-[#00E5FF]/40 backdrop-blur-md shadow-lg">
+      {/* BADGE DE CABEÇALHO (INDICADOR DE SNAP OU PRECISÃO 3X + BOTÃO FIXAR) */}
+      <div className="mb-1.5 flex items-center justify-between px-2 py-0.5 rounded-md bg-[#0B1017]/95 border border-[#00E5FF]/40 backdrop-blur-md shadow-lg pointer-events-auto">
         <div className="flex items-center gap-1 text-[9px] font-mono font-bold tracking-wider text-[#00E5FF]">
           {temporaryOrigin ? (
             <>
@@ -549,9 +599,32 @@ export function ChamferPrecisionLoupeOverlay({
             </>
           )}
         </div>
-        <span className="text-[8px] font-mono text-cyan-300/70 font-semibold uppercase">
-          {drawingProjection === "isometric" ? `ISO ${isoPlane}` : "ORTHO"}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[8px] font-mono text-cyan-300/70 font-semibold uppercase">
+            {drawingProjection === "isometric" ? `ISO ${isoPlane}` : "GRID / ORTHO"}
+          </span>
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTogglePinned();
+            }}
+            title={isPinned ? "Desafixar Lupa (Acompanhar dedo)" : "Fixar Lupa no canto da tela (Modo Fixo)"}
+            className={cn(
+              "p-1 rounded transition-colors cursor-pointer flex items-center justify-center",
+              isPinned
+                ? "bg-cyan-500/30 text-cyan-300 hover:bg-cyan-500/50"
+                : "text-slate-400 hover:text-cyan-300 hover:bg-white/10"
+            )}
+          >
+            {isPinned ? (
+              <Pin className="w-3 h-3 text-cyan-300 fill-cyan-300/60" />
+            ) : (
+              <PinOff className="w-3 h-3" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* CONTAINER QUADRADO TÉCNICO 130px x 130px (CANVAS VETORIAL AMPLIADO) */}
@@ -616,12 +689,14 @@ export function ChamferPrecisionLoupeOverlay({
         )}
       </div>
 
-      {/* GUIA TÉCNICA VISUAL APONTANDO NA DIREÇÃO DO DEDO / PONTO DE CONTATO */}
-      <div
-        className={`absolute left-1/2 -translate-x-1/2 w-0.5 bg-gradient-to-b from-[#00E5FF]/80 to-transparent pointer-events-none ${
-          isTouchNearTop ? "-top-6 h-6" : "-bottom-6 h-6"
-        }`}
-      />
+      {/* GUIA TÉCNICA VISUAL APONTANDO NA DIREÇÃO DO DEDO / PONTO DE CONTATO (APENAS MODO FLUTUANTE) */}
+      {!isPinned && (
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 w-0.5 bg-gradient-to-b from-[#00E5FF]/80 to-transparent pointer-events-none ${
+            isTouchNearTop ? "-top-6 h-6" : "-bottom-6 h-6"
+          }`}
+        />
+      )}
     </div>
   );
 }

@@ -195,14 +195,14 @@ export function buildModel(i: SquareToRoundInput): SquareToRoundModel {
       const middle = { x: (corner.x + nextCorner.x) / 2, y: (corner.y + nextCorner.y) / 2, z: 0 };
       const firstPiece: "A" | "B" = k === 0 ? "B" : "A";
       const secondPiece: "A" | "B" = k === 0 ? "A" : "B";
-      faces.push({ id: `Q${k}-BASE-1`, piece: firstPiece, points: [corner, middle, endPoint] });
+      faces.push({ id: `Q${k}-BASE-1`, piece: firstPiece, points: [corner, endPoint, middle] });
       faces.push({
         id: `Q${k}-BASE-2`,
         piece: secondPiece,
-        points: [middle, nextCorner, endPoint],
+        points: [middle, endPoint, nextCorner],
       });
     } else {
-      faces.push({ id: `Q${k}-BASE`, piece: pieceOf(k), points: [corner, nextCorner, endPoint] });
+      faces.push({ id: `Q${k}-BASE`, piece: pieceOf(k), points: [corner, endPoint, nextCorner] });
     }
   }
   return { corners, arcPoints, circle, faces, generatrices };

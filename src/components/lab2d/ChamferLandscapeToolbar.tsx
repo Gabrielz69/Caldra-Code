@@ -26,6 +26,7 @@ import {
   Dot,
   Move,
   Copy,
+  ClipboardList,
   RotateCw,
   FlipHorizontal,
   Maximize2,
@@ -87,6 +88,7 @@ interface ChamferLandscapeToolbarProps {
   onCenterSelection?: () => void;
   onArrayLinear: () => void;
   onArrayPolar: () => void;
+  onOpenClipboard?: () => void;
   // Precisão
   snapOn: boolean;
   setSnapOn: (fn: (v: boolean) => boolean) => void;
@@ -141,6 +143,7 @@ export function ChamferLandscapeToolbar({
   onCenterSelection,
   onArrayLinear,
   onArrayPolar,
+  onOpenClipboard,
   snapOn,
   setSnapOn,
   showGrid,
@@ -305,6 +308,12 @@ export function ChamferLandscapeToolbar({
         {/* ============================================================== */}
         {activeTab === "modificar" && (
           <div className="flex items-center gap-1">
+            <RibbonBtn
+              onClick={onOpenClipboard}
+              icon={ClipboardList}
+              label="Transferência"
+              title="Área de Transferência Global (formas copiadas e colar)"
+            />
             <RibbonBtn
               disabled={!hasSelection}
               onClick={onMoveSelection}

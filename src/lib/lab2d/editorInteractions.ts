@@ -22,6 +22,21 @@ export function shouldClosePolyline(points: Vec2[], point: Vec2, tolerance: numb
   return points.length > 2 && dist(points[0]!, point) <= tolerance;
 }
 
+/**
+ * Força o travamento ortogonal estrito escolhendo o eixo dominante em relação ao ponto anterior:
+ * Se Math.abs(dx) > Math.abs(dy), trava horizontalmente (currentY = lastPoint.y).
+ * Caso contrário, trava verticalmente (currentX = lastPoint.x).
+ */
+export function projectOrthoSegment(lastPoint: Vec2, currentPoint: Vec2): Vec2 {
+  const dx = currentPoint.x - lastPoint.x;
+  const dy = currentPoint.y - lastPoint.y;
+  if (Math.abs(dx) > Math.abs(dy)) {
+    return { x: currentPoint.x, y: lastPoint.y };
+  } else {
+    return { x: lastPoint.x, y: currentPoint.y };
+  }
+}
+
 export function copySelection(
   entities: Entity[],
   selectedIds: string[],

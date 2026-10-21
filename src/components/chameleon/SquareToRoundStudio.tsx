@@ -98,8 +98,8 @@ export function SquareToRoundStudio({
   const [stage, setStage] = useState<"modelo" | "resultados">("modelo");
   const group = groupOf(tab);
 
-  /* 3D é camada da área de resultado, não etapa do fluxo. */
-  const [viewMode, setViewMode] = useState<VisualizationMode>("2d");
+  /* 3D é camada da área de resultado, carregada por padrão em 360° sólido sombreado. */
+  const [viewMode, setViewMode] = useState<VisualizationMode>("3d");
   const [explain, setExplain] = useState(false);
   const [unfold, setUnfold] = useState(0);
   const navigate = useNavigate();

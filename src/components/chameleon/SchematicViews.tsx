@@ -304,13 +304,13 @@ export function SchematicViews({
         {showGeneratrices && (
           <g data-layer="generatrices-front">
             {generatrices.map((g) => {
-              const x1 = frontT.X(g.front.x1);
-              const y1 = frontT.Y(g.front.y1);
-              const x2 = frontT.X(g.front.x2);
-              const y2 = frontT.Y(g.front.y2);
+              const x1 = Number(frontT.X(g.front.x1).toFixed(3));
+              const y1 = Number(frontT.Y(g.front.y1).toFixed(3));
+              const x2 = Number(frontT.X(g.front.x2).toFixed(3));
+              const y2 = Number(frontT.Y(g.front.y2).toFixed(3));
               const isSelected = selectedRef === foldRef(g.index);
-              const mx = (x1 + x2) / 2;
-              const my = (y1 + y2) / 2;
+              const mx = Number(((x1 + x2) / 2).toFixed(3));
+              const my = Number(((y1 + y2) / 2).toFixed(3));
               return (
                 <g key={`front-${g.id}`}>
                   <line
@@ -399,13 +399,13 @@ export function SchematicViews({
         {showGeneratrices && (
           <g data-layer="generatrices-plan">
             {generatrices.map((g) => {
-              const x1 = planT.X(g.plan.x1);
-              const y1 = planT.Y(g.plan.y1);
-              const x2 = planT.X(g.plan.x2);
-              const y2 = planT.Y(g.plan.y2);
+              const x1 = Number(planT.X(g.plan.x1).toFixed(3));
+              const y1 = Number(planT.Y(g.plan.y1).toFixed(3));
+              const x2 = Number(planT.X(g.plan.x2).toFixed(3));
+              const y2 = Number(planT.Y(g.plan.y2).toFixed(3));
               const isSelected = selectedRef === foldRef(g.index);
-              const mx = (x1 + x2) / 2;
-              const my = (y1 + y2) / 2;
+              const mx = Number(((x1 + x2) / 2).toFixed(3));
+              const my = Number(((y1 + y2) / 2).toFixed(3));
               return (
                 <g key={`plan-${g.id}`}>
                   <line
